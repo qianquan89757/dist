@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="vue.js"></script>
+    <script src="axios.min.js"></script>
+    <script src="ui/moment.min.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <title>exlive3.0 运行监控</title>
+</head>
+
+<body>
+    <div v-clock class="app" id="app">
+
+        <div class="frame" style="display:flex">
+            <p class="timer">{{freshTime}}</p>
+            <!-- mid -->
+            <div class="mid">
+                <!-- 1 -->
+                <div class="block-1">
+                    <!-- 1 -->
+                    <div class="block-1-item">
+                        <i class="dingweishebei"></i>
+                        <span>定位设备</span>
+                    </div>
+                    <!-- 1 end-->
+                    <!-- 1 -->
+                    <div class="block-1-item">
+                        <i class="zhudonganquan"></i>
+                        <span>主动安全</span>
+                    </div>
+                    <!-- 1 end-->
+                    <!-- 1 -->
+                    <div class="block-1-item">
+                        <i class="gudingdianshebei"></i>
+                        <span>固定点设备</span>
+                    </div>
+                    <!-- 1 end-->
+                    <!-- 1 -->
+                    <div class="block-1-item">
+                        <i class="chezaishipinshebei"></i>
+                        <span>车载视频设备</span>
+                    </div>
+                    <!-- 1 end-->
+                    <!-- 1 -->
+                    <div class="block-1-item">
+                        <i class="dingweixiongpai"></i>
+                        <span>定位胸牌</span>
+                    </div>
+                    <!-- 1 end-->
+                    <!-- 1 -->
+                    <div class="block-1-item">
+                        <i class="chuanganqi"></i>
+                        <span>传感器</span>
+                    </div>
+                    <!-- 1 end-->
+                    <!-- 1 -->
+                    <div class="block-1-item">
+                        <i class="duijiangshebei"></i>
+                        <span>对讲设备</span>
+                    </div>
+                    <!-- 1 end-->
+                </div>
+                <!-- 2 -->
+                <div class="point" style="margin-left:8px;">
+                    <div style="margin-bottom:8px;">
+                        <span style="font-size: 14px;">连接数:</span>
+                        <span style="font-weight: bold;font-size: 15px;">{{data.tcp_num}}</span>
+                    </div>
+                    <div class="point-wrap" style="width: 120px;margin-bottom:15px;">
+                        <div class="point-block" style="background: #20c9a0;margin-left:32px;">
+                            <span>TCP</span>
+                        </div>
+                        <div class="arrow-wrap" style="position:absolute">
+                            <div class="point-line"></div>
+                            <i class="arrow"></i>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <span style="font-size: 14px;">连接数:</span>
+                        <span style="font-weight: bold;font-size: 15px;">{{data.udp_num}}</span>
+                    </div>
+                    <div class="point-wrap" style="width: 120px;">
+                        <div class="point-block" style="background: #ff8503;margin-left:32px;">UDP</div>
+                        <div class="arrow-wrap" style="position:absolute">
+                            <div class="point-line"></div>
+                            <i class="arrow"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- 3 -->
+                <div>
+                    <div style="margin-bottom:8px;">
+                        <span style="font-size: 14px;">连接数:</span>
+                        <span style="font-weight: bold;font-size: 15px;">{{netty_num}}</span>
+                    </div>
+                    <div class="block-2">
+                        <i class="Netty"></i>
+                        <span>Netty</span>
+                    </div>
+                </div>
+                <!-- 4 -->
+                <div class="point" style="margin-left:8px;margin-top:-76px">
+                    <div class="point-wrap point-wrap-1" style="width:40px;flex-direction: column;">
+                        <div class="arrow-wrap">
+                            <div class="point-line"></div>
+                            <i class="arrow"></i>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- 5 -->
+                <div class="block-item">
+                    <div class="block-2">
+                        <i class="xianchengchi"></i>
+                        <span>线程池</span>
+                    </div>
+
+                </div>
+                <!-- 6 -->
+                <div class="block-item" style="width:90px;margin-left: 8px;margin-top:420px;position: relative;">
+                    <div class="block-3">
+                        <div class="block-3-icon">
+                            <i class="jingdu"></i>
+                            <span>经度</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="weidu"></i>
+                            <span>纬度</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="sudu"></i>
+                            <span>速度</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="fangxiang"></i>
+                            <span>方向</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="zhuangtai"></i>
+                            <span>状态</span>
+                        </div>
+                        <div class="block-3-bottom">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
+                    </div>
+                    <p style="text-align: center;margin-top:15px">原始数据解析</p>
+                    <div style="height:270px;width:4px;background:#c5c6c8;position:absolute;left:44px;top:440px;border-radius:2px;">
+                    </div>
+                    <div style="display: flex;margin-top:60px;position:relative;height: 306px;">
+                        <div style="position: absolute;left:-70px;top:-22px">
+                            <div class="p-text" style="font-size:14px;">
+                                <p>接收：<span style="font-weight: bold;">{{data['809_recv']}}</span>
+                                </p>
+                                <p>消费：<span style="font-weight: bold;">{{data['809_xiaofei']}}</span>
+                                </p>
+                                <p>积压：<span :style="filters(data['809_jiya'])" style="font-weight: bold;">{{data['809_jiya']}}</span>
+                                </p>
+                            </div>
+                            <div class="p-text" style="font-size:14px;margin-top:106px;">
+                                <p>接收：<span style="font-weight: bold;">{{data['808_recv']}}</span></p>
+                                <p>消费：<span style="font-weight: bold;">{{data['808_xiaofei']}}</span>
+                                </p>
+                                <p>积压：<span :style="filters(data['808_jiya'])" style="font-weight: bold;">{{data['808_jiya']}}</span>
+                                </p>
+                            </div>
+
+                        </div>
+                        <div style="position: absolute;left:44px;display: flex;">
+                            <!-- b -->
+                            <div style="height: 198px;display: flex;flex-direction: column;justify-content: space-between;margin-top:34px">
+                                <div class="point-wrap" style="width:144px;flex-direction: column;">
+                                    <div class="point-block-line" style="background: #fff;">MQ</div>
+                                    <div class="arrow-wrap" style="position: absolute;bottom: 9px;">
+                                        <div class="point-line"></div>
+                                        <i class="arrow"></i>
+                                    </div>
+                                </div>
+                                <div class="point-wrap" style="width:144px;flex-direction: column;">
+                                    <div class="point-block-line" style="background: #fff;">MQ</div>
+                                    <div class="arrow-wrap" style="position: absolute;bottom: 9px;">
+                                        <div class="point-line"></div>
+                                        <i class="arrow"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- b end -->
+                            <!-- b -->
+                            <div style="display: flex;flex-direction: column;justify-content: space-between;height: 260px;">
+                                <div class="block-2">
+                                    <i class="zhuanfa1"></i>
+                                    <span>809转发</span>
+                                </div>
+                                <div class="block-2">
+                                    <i class="zhuanfa2"></i>
+                                    <span>第三方转发</span>
+                                </div>
+                            </div>
+                            <!-- b end -->
+                            <!-- b -->
+                            <div style="display: flex;flex-direction: column;justify-content: space-between;height:262px;">
+                                <div class="block-2" style="background: none;">
+                                    <div class="dubleArrow" style="display: inline-block;margin: 22px 0px;transform: rotate(90deg);"></div>
+                                </div>
+                                <div class="block-2" style="background: none;">
+                                    <div class="point-wrap" style="width:100px;flex-direction: column;">
+                                        <div class="point-block-line" style="background: #fff;margin-left: -7px;">发出
+                                        </div>
+                                        <div class="arrow-wrap" style="position: absolute;bottom: 9px;">
+                                            <div class="point-line"></div>
+                                            <i class="arrow" style="width: 18px;height: 16px;margin:0px;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- b end -->
+                            <!-- b -->
+                            <div class="block-item" style="width: 200px;">
+                                <div class="block-3" style="margin-left:8px;margin-top:6px">
+                                    <div style="display: flex;justify-content: center;">
+                                        <div style="margin-right:40px;">
+                                            <div class="block-3-icon">
+                                                <i class="zhudonganquan"></i>
+                                                <span>主动安全</span>
+                                            </div>
+                                            <div class="block-3-icon">
+                                                <i class="shipinfuwu"></i>
+                                                <span>视频</span>
+                                            </div>
+                                            <div class="block-3-icon">
+                                                <i class="duban"></i>
+                                                <span>督办</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="block-3-icon">
+                                                <i class="mingling"></i>
+                                                <span>命令</span>
+                                            </div>
+                                            <div class="block-3-icon">
+                                                <i class="chagang"></i>
+                                                <span>查岗</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="block-3-bottom">
+                                        <div></div>
+                                        <div></div>
+                                        <div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- b end -->
+
+                            <!-- b -->
+                            <div class="block-item" style="margin-left: 80px;">
+                                <div class="block-3" style="margin-left:8px;margin-top:6px;padding:20px;">
+                                    <div>
+                                        <p style="font-size:18px;"><b>车辆统计</b></p>
+                                        <div style="margin-top:10px">
+                                            <span>总车辆数:</span>
+                                            <span style="font-weight: bold;">{{server.vehicle.count}}</span>,
+                                            <span>在线车辆数:</span>
+                                            <span style="font-weight: bold;">{{server.vehicle.online}}</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top:20px">
+                                        <p style="font-size:18px;"><b>服务器资源</b></p>
+                                        <div style="margin-top:10px">
+                                            <span>内存共:</span>
+                                            <span style="font-weight: bold;">{{server.mem.total}}G</span>,
+                                            <span>当前使用:</span>
+                                            <span style="font-weight: bold;">{{server.mem.usage}}%</span>
+                                        </div>
+                                        <div style="margin-top:10px">
+                                            <span>CPU共:</span>
+                                            <span style="font-weight: bold;">{{server.cpu.cores}}核</span>,
+                                            <span>当前使用:</span>
+                                            <span style="font-weight: bold;">{{server.cpu.usage}}%</span>
+                                        </div>
+                                        <div style="margin-top:10px" v-for="item in server.disk" :key="item.name">
+                                            <span>{{item.name}}盘使用共:</span>
+                                            <span style="font-weight: bold;">{{item.total}}G</span>,
+                                            <span>已使用:</span>
+                                            <span style="font-weight: bold;">{{item.usage}}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- b end -->
+                        </div>
+                    </div>
+                </div>
+                <!-- 7 -->
+                <div class="point" style="margin-left:8px;margin-top:-76px">
+                    <div class="point-wrap point-wrap-1" style="width:160px;flex-direction: column;">
+                        <div class="p-text" style="font-size:14px;">
+                            <p>接收：<b>{{data.raw_recv}}/m</b></p>
+                            <p>消费：<b>{{data.raw_xiaofei}}/m</b></p>
+                            <p>积压：<b :style="filters(data.raw_jiya)">{{data.raw_jiya}}</b></p>
+                        </div>
+                        <div class="point-block-line" style="background: #fff;width:68px">recv MQ</div>
+                        <div class="arrow-wrap" style="position: absolute;bottom: 9px;">
+                            <div class="point-line"></div>
+                            <i class="arrow"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- 8 -->
+                <div class="block-2">
+                    <i class="xianchengchi"></i>
+                    <span>线程池</span>
+                </div>
+                <!-- 9 -->
+                <div class="block-item" style="width: 214px;margin-left: 8px;margin-top:55px;">
+                    <!-- <div class="dubleArrow" style="display: inline-block;margin:8px 0px;"></div> -->
+
+                    <div class="block-3">
+                        <div style="display: flex;justify-content: center;">
+                            <div style="margin-right:40px;">
+                                <div class="block-3-icon">
+                                    <i class="xintiao"></i>
+                                    <span>心跳处理</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="weizhijiupian"></i>
+                                    <span>位置纠偏</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="weizhijiupian"></i>
+                                    <span>位置描述</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="jisuanlicheng"></i>
+                                    <span>计算里程</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="baojingxinxi"></i>
+                                    <span>报警信息</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="block-3-icon">
+                                    <i class="daoludengji"></i>
+                                    <span>道路等级</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="dianziweilan"></i>
+                                    <span>电子围栏</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="jisuanzhuangtai"></i>
+                                    <span>计算状态</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="youliangxiaohao"></i>
+                                    <span>油量消耗</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="wenshidu"></i>
+                                    <span>温度/湿度</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="block-3-bottom">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
+                    </div>
+                    <p style="text-align: center;margin-top:15px">业务数据解析</p>
+                </div>
+                <!-- 10 -->
+
+                <!-- 11 -->
+                <div>
+                    <div style="display: flex;align-items: center;">
+                        <div class="point" style="margin-left:8px;margin-top:-76px">
+                            <div class="point-wrap point-wrap-1" style="width:160px;flex-direction: column;">
+                                <div class="p-text" style="font-size:14px;">
+                                    <p>接收：<b>{{data.business_recv}}/m</b></p>
+                                    <p>消费：<b>{{data.business_xiaofei}}/m</b></p>
+                                    <p>积压：<b :style="filters(data.business_jiya)">{{data.business_jiya}}</b></p>
+                                </div>
+                                <div class="point-block-line" style="background: #fff;width:68px
+                            ;">store MQ</div>
+                                <div class="arrow-wrap" style="position: absolute;bottom: 9px;">
+                                    <div class="point-line"></div>
+                                    <i class="arrow"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="block-3">
+                            <div class="block-2" style="background: none;">
+                                <i class="guiji"></i>
+                                <span>轨迹存储</span>
+                            </div>
+                            <div class="block-2" style="background: none;">
+                                <i class="zaixian"></i>
+                                <span>在线计算</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex;justify-content: center;margin-top:30px">
+                        <div class="dArrow"></div>
+                    </div>
+                </div>
+
+
+                <!-- 12 -->
+                <div class="point" style="margin-left:8px;">
+                    <div class="point-wrap" style="width: auto;">
+                        <div style="border-left:4px solid #c5c6c8;height:360px;width:34px;display: flex;justify-content: space-between;flex-direction: column;">
+                            <div class="arrow-wrap" style="margin-left: -4px;">
+                                <div class="point-line"></div>
+                                <i class="arrow"></i>
+                            </div>
+                            <div class="arrow-wrap" style="margin-left: -4px;">
+                                <div class="point-line"></div>
+                                <i class="arrow"></i>
+                            </div>
+                            <div class="arrow-wrap" style="margin-left: -4px;">
+                                <div class="point-line"></div>
+                                <i class="arrow"></i>
+                            </div>
+                            <div class="arrow-wrap" style="margin-left: -4px;">
+                                <div class="point-line"></div>
+                                <i class="arrow"></i>
+                            </div>
+                        </div>
+                        <!-- <div class="arrow-wrap" style="position: absolute;">
+                            <div class="point-line"></div>
+                            <i class="arrow"></i>
+                        </div> -->
+                    </div>
+                </div>
+                <!-- 13 -->
+                <!-- 14 -->
+                <div class="block-item" style="margin-left: 8px;">
+                    <div class="block-item-block" style="height: 440px;">
+                        <!-- <div style="margin-bottom:8px;">
+                            <span style="font-size: 14px;">连接数:</span>
+                            <span style="font-weight: bold;font-size: 15px;">15988</span>
+                        </div> -->
+                        <div style="margin-bottom: 8px;margin-top:-26px">
+                            <div style="margin-bottom:4px;">
+                                <span style="font-size: 14px;">连接数:</span>
+                                <span style="font-weight: bold;font-size: 15px;">{{data.rds_num}}</span>
+                            </div>
+                            <div class="block-3" style="padding-bottom: 10px;width:78px;">
+                                <div class="block-3-icon">
+                                    <i class="mysql"></i>
+                                    <span>Redis</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 8px;margin-top:-20px">
+                            <div style="margin-bottom:4px;">
+                                <span style="font-size: 14px;">连接数:</span>
+                                <span style="font-weight: bold;font-size: 15px;">{{data.es_num}}</span>
+                            </div>
+                            <div class="block-3" style="padding-bottom: 10px;width:78px;">
+                                <div class="block-3-icon">
+                                    <i class="mysql"></i>
+                                    <span>ES/HBase</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 8px;margin-top:-17px">
+                            <div style="margin-bottom:4px;">
+                                <span style="font-size: 14px;">连接数:</span>
+                                <span style="font-weight: bold;font-size: 15px;">{{data.msql_num}}</span>
+                            </div>
+                            <div class="block-3" style="padding-bottom: 10px;width:78px;">
+                                <div class="block-3-icon">
+                                    <i class="mysql"></i>
+                                    <span>MySQL</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="block-3" style="padding-bottom: 10px;width:78px;">
+                                <div class="block-3-icon">
+                                    <i class="mysql"></i>
+                                    <span>硬盘</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- 15 -->
+                <div class="point" style="margin-left:8px;">
+                    <div class="point-wrap" style="width: auto;">
+                        <div style="border-right:4px solid #c5c6c8;height:360px;width:34px;display: flex;justify-content: space-between;flex-direction: column;">
+                            <div class="arrow-wrap" style="margin-left: 2px;">
+                                <div class="point-line" style="width: 100%;"></div>
+                            </div>
+                            <div class="arrow-wrap" style="margin-left: 2px;">
+                                <div class="point-line" style="width: 100%;"></div>
+                            </div>
+                            <div class="arrow-wrap" style="margin-left: 2px;">
+                                <div class="point-line" style="width: 100%;"></div>
+                            </div>
+                            <div class="arrow-wrap" style="margin-left: 2px;">
+                                <div class="point-line" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- 16 -->
+                <div class="block-item" style="margin:0px 15px;">
+                    <div class="dubleArrow" style="transform: rotate(90deg);"></div>
+                </div>
+                <!-- 17 -->
+                <div class="block-item" style="width: 110px;">
+                    <div class="block-3" style="padding-bottom: 14px;">
+                        <div class="block-3-icon">
+                            <i class="yingyongfuwu"></i>
+                            <span>应用服务</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="tongjibaobiao"></i>
+                            <span>统计报表</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="shipinfuwu"></i>
+                            <span>视频服务</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="zhudonganquan"></i>
+                            <span>主动安全服务</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="lixianjisuan"></i>
+                            <span>离线计算服务</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="ercikaifa"></i>
+                            <span>二次开发服务</span>
+                        </div>
+                        <div class="block-3-icon">
+                            <i class="zhuanfa"></i>
+                            <span>第三方转发</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 18 -->
+                <div class="point" style="margin-left:8px;">
+                    <div class="point-wrap" style="width:100px;flex-direction: column;">
+                        <div class="point-block-line" style="background: #fff;width:58px;margin-left: -6px;">NGINX</div>
+                        <div class="arrow-wrap" style="position: absolute;bottom: 9px;">
+                            <div class="point-line"></div>
+                            <i class="arrow"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- 19 -->
+                <div class="block-item" style="width:236px;">
+                    <div class="block-3" style="padding-bottom: 15px;">
+                        <div style="display: flex;justify-content: center;">
+                            <div style="margin-right:8px;">
+                                <div class="block-3-icon">
+                                    <i class="bs"></i>
+                                    <span>BS端</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="appAndmini"></i>
+                                    <span>APP/小程序</span>
+                                </div>
+                                <div class="block-3-icon">
+                                    <i class="erp"></i>
+                                    <span>ERP/OA</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="block-3-icon" style="height: 36px;line-height:36px;background: #efefef;width: 120px;margin-top:20px;">
+                                    <span style="align-self: self-start;padding:0px 15px">访问量：<b>{{data.bs}}</b></span>
+                                </div>
+                                <div class="block-3-icon" style="height: 36px;line-height:36px;background: #efefef;width: 120px;margin-top:40px;;">
+                                    <span style="align-self: self-start;padding:0px 15px">访问量：<b>{{data.app}}</b></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- color -->
+                <div class="color">
+                    <button style="
+                    padding:10px 22px;
+                    margin-bottom: 10px;
+                    color: #fff;
+                    background-color: #409eff;
+                    border-color: #409eff;
+                    border: 1px solid #dcdfe6;
+                    cursor: pointer;
+                    z-index: 999;
+                    border-radius: 4px;" @click="fresh">{{text}}</button>
+                    <div style="display: flex;align-items: center;">
+                        <div style="display: inline-block;width: 70px;height:24px;background: #fa454c;"></div>
+                        <div style="display: inline-block;margin-left: 5px;">异常</div>
+                    </div>
+                    <div style="display: flex;align-items: center;">
+                        <div style="display: inline-block;width: 70px;height:24px;background: #fc8505;"></div>
+                        <div style="display: inline-block;margin-left: 5px;">警告</div>
+                    </div>
+                    <div style="display: flex;align-items: center;">
+                        <div style="display: inline-block;width: 70px;height:24px;background: #1fc89f;"></div>
+                        <div style="display: inline-block;margin-left: 5px;">正常</div>
+                    </div>
+                </div>
+            </div>
+            <!-- mid end -->
+        </div>
+
+    </div>
+</body>
+
+</html>
+
+<script>
+    let audio = new Audio('./voice/louyou.wav')
+    let alarmNum1 = 0; //报警次数
+    let alarmNum2 = 0; //报警次数
+    let t1 = null;
+    let t2 = null;
+    let timer = null;
+    let timer2 = null;
+    const app = new Vue({
+        el: '#app',
+        data() {
+            return {
+                text: '刷新',
+                freshTime:'-',
+                num: 0,
+                data: {
+                    app: "-", //app访问量
+                    bs: "-", //bs访问量
+                    business_jiya: "-",
+                    business_recv: "-",
+                    business_xiaofei: "-",
+                    raw_jiya: "-",
+                    raw_recv: "-",
+                    raw_xiaofei: "-",
+                    tcp_num: '-',
+                    udp_num: '-',
+                    rds_num: '-',
+                    msql_num: '-',
+                    es_num: "-",
+                    hbs_num: "-",
+                    '808_jiya': "-",
+                    '808_recv': "-",
+                    '808_xiaofei': "-",
+                    '809_jiya': "-",
+                    '809_recv': "-",
+                    '809_xiaofei': "-",
+                },
+                server: {
+                    vehicle: {
+                        count: '-',
+                        online: '-'
+                    },
+                    cpu: {
+                        cores: '-',
+                        usage: '-'
+                    },
+                    disk: [],
+                    mem: {
+                        total: '-',
+                        usage: ''
+                    }
+                }
+            }
+        },
+        watch: {
+            num() {
+                if (this.num == 2) {
+                    this.num = 0
+                    this.text = '刷新'
+                }
+            }
+        },
+        computed: {
+            netty_num() {
+                if (!isNaN(Number(this.data.tcp_num)) && !isNaN(Number(this.data.udp_num))) {
+                    return Number(this.data.tcp_num) + Number(this.data.udp_num)
+                }
+                if (!isNaN(Number(this.data.tcp_num)) && isNaN(Number(this.data.udp_num))) {
+                    return Number(this.data.tcp_num)
+                }
+                if (isNaN(Number(this.data.tcp_num)) && !isNaN(Number(this.data.udp_num))) {
+                    return Number(this.data.udp_num)
+                }
+                return '-'
+            },
+            esH_num() {
+                if (!isNaN(Number(this.data.es_num)) && !isNaN(Number(this.data.hbs_num))) {
+                    return Number(this.data.es_num) + Number(this.data.hbs_num)
+                }
+                if (!isNaN(Number(this.data.es_num)) && isNaN(Number(this.data.hbs_num))) {
+                    return Number(this.data.es_num)
+                }
+                if (isNaN(Number(this.data.es_num)) && !isNaN(Number(this.data.hbs_num))) {
+                    return Number(this.data.hbs_num)
+                }
+                return '-'
+            }
+        },
+        mounted() {
+            this.freshTime=moment().format('YYYY-MM-DD HH:mm:ss');
+            this.query()
+            this.sysquery()
+            timer = setInterval(() => {
+                this.query()
+                this.freshTime=moment().format('YYYY-MM-DD HH:mm:ss');
+            }, 60 * 1000)
+            timer2 = setInterval(() => {
+                this.sysquery()
+            }, 10 * 60 * 1000)
+        },
+        destroyed() {
+            clearInterval(timer)
+            clearInterval(timer2)
+        },
+        methods: {
+            filters(e) {
+                if (e === '-') {
+                    return
+                }
+                if (e < 100 && e >= 0) {
+                    return 'color:#1fc89f'
+                }
+                if (e >= 100 && e < 500) {
+                    return 'color:#fc8505'
+                }
+                if (e >= 500) {
+                    return 'color:#fa454c'
+                }
+            },
+            sysquery() {
+                axios({
+                    url: '/video/home/server/public/info',
+                    method: 'post',
+                }).then(res => {
+                    if (res.data.code === '0000') {
+                        this.server = res.data.data
+                        this.num = this.num + 1
+                    }
+                })
+            },
+            query() {
+                axios({
+                    url: '/video/public/jmx/sysMonotir/data',
+                    method: 'post',
+                }).then(res => {
+                    if (res.data.code === '0000') {
+                        this.data = res.data.data
+                        this.num = this.num + 1
+                    }
+                })
+
+            },
+            fresh() {
+                if (this.num > 0) {
+                    return
+                }
+                this.freshTime=moment().format('YYYY-MM-DD HH:mm:ss');
+                this.data = {
+                    app: "-", //app访问量
+                    bs: "-", //bs访问量
+                    business_jiya: "-",
+                    business_recv: "-",
+                    business_xiaofei: "-",
+                    raw_jiya: "-",
+                    raw_recv: "-",
+                    raw_xiaofei: "-",
+                    tcp_num: '-',
+                    udp_num: '-',
+                    rds_num: '-',
+                    msql_num: '-',
+                    es_num: "-",
+                    hbs_num: "-",
+                    '808_jiya': "-",
+                    '808_recv': "-",
+                    '808_xiaofei': "-",
+                    '809_jiya': "-",
+                    '809_recv': "-",
+                    '809_xiaofei': "-",
+                }
+                this.server = {
+                    vehicle: {
+                        count: '-',
+                        onlin: '-'
+                    },
+                    cpu: {
+                        cores: '-',
+                        usage: '-'
+                    },
+                    disk: [],
+                    mem: {
+                        total: '-',
+                        usage: ''
+                    }
+                }
+                this.text = "刷新中"
+                this.sysquery()
+                this.query()
+            }
+        }
+    })
+</script>

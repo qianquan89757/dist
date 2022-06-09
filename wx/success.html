@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./lib/vue.js"></script>
+    <script src="./lib/axios.min.js"></script>
+    <title>EXLIVE车联网综合服务平台</title>
+</head>
+
+<body>
+    <div id="app" class="success">
+        <div class="success-area">
+            <i class="icon-success"></i>
+        </div>
+        <div class="success-text-area">
+            <h2 class="success-title">{{message}}</h2>
+            <p class="success-p">{{tips}}</p>
+        </div>
+        <div class="success-button">
+            <p class="success-button-area">
+                <a href="javascript:;" class="success-button-primary" @click="handleClose">关闭页面</a>
+                <a href="javascript:;" v-show="userid>0" class="success-button-default" @click="handleUnbind">解除绑定</a>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                openid: "",
+                message: "",
+                tips: "",
+                userid:0,
+            }
+        },
+        mounted() {
+            let params = window.location.search.substr(1);
+            this.openid = params;
+            this.init();
+        },
+        methods: {
+            init() {
+                let that = this;
+                axios({
+                    url: '/video/public/wechat/info',
+                    method: 'post',
+                    params: {
+                        openid: this.openid
+                    }
+                }).then(res => {
+                    if (res.data.code == '0000') {
+                        let user = res.data.data;
+                        that.userid=user.userid;
+                        that.message = "绑定成功"
+                        if (user.type == 0) {
+                            that.tips = "已与平台 " + user.name + " 绑定";
+                        } else {
+                            that.tips = "已与车辆 " + user.name + " 绑定";
+                        }
+                    } else {
+                    }
+                })
+            },
+            handleClose() {
+                window.close();
+            },
+            handleUnbind() {
+                this.message="解绑成功";
+                this.tips="";
+                this.userid=0;
+            }
+        },
+    })
+</script>
+<style>
+    .success {
+        padding-top: 36px;
+        text-align: center;
+    }
+
+    .success-area {
+        margin-bottom: 30px;
+    }
+
+    .icon-success {
+        display: inline-block;
+        width: 93px;
+        height: 93px;
+        background: url(./images/success.svg) no-repeat center;
+        background-size: contain;
+    }
+
+    .success-title {
+        margin-bottom: 5px;
+        font-weight: 400;
+        font-size: 20px;
+    }
+
+    .success-p {
+        font-size: 14px;
+        color: #999;
+    }
+
+    .success-button-area {
+        margin: 1.17647059em 15px .3em;
+    }
+
+    .success-button-area>a {
+        display: block;
+        font-size: 18px;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 5px;
+        overflow: hidden;
+        line-height: 2.55555556;
+    }
+
+    .success-button-primary {
+        color: #fff;
+        background-color: #01b97e;
+    }
+
+    .success-button-default {
+        color: #000;
+        margin-top: 15px;
+        background-color: #f8f8f8;
+        border: 1px solid rgba(0, 0, 0, .2);
+    }
+</style>

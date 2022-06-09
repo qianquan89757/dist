@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no">
+    <script src="./axios.min.js"></script>
+    <script src="./vue.js"></script>
+    <script src="./md5.js"></script>
+    <script src="https://webapi.amap.com/maps?v=1.4.15&amp;key=311f25d6868ca0039f68575345df8e04"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>手机查车3.0轨迹回放分享</title>
+</head>
+<body>
+    <div class="app" id="apps">
+        <div v-if="isEmpty">
+            <van-empty description="分享已失效"/>
+        </div>
+        <div v-else style="height: 100%;">
+            <!-- <div class="map" id="container">main</div> -->
+          <el-container style="height: 100%;">
+            <el-main style="margin: 0;padding: 0;">
+              <div class="map" id="container">main</div>
+            </el-main>
+            <el-footer style="margin: 0;padding: 0;height: auto;">
+              <div class="coment_dom">
+                <div class="coment_icon" v-if="shareIcon">
+                  <van-icon  name="arrow-down" @click="shareIconClick" />
+                </div>
+                <div class="coment_icon" v-else>
+                  <van-icon name="arrow-up" @click="shareIconClick"/>
+                </div>
+                <div class="coment_comment" v-if="shareIcon">
+                  <div>
+                    <span>服务器时间：</span>
+                    2021-02-07 15:15:15
+                  </div>
+                  <div>
+                    <span>设备时间：</span>
+                    2021-02-07 15:15:15
+                  </div>
+                  <div>
+                    <div style="display: inline-block;margin-right: 20px;">
+                      <span>行驶路程：</span>
+                      <span>4.65km</span>
+                    </div>
+                    <div style="display: inline-block;">
+                      <span>累计里程：</span>
+                      <span>15.5km</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display: inline-block;margin-right: 20px;">
+                      <span>速度：</span>
+                      <span>65km/h</span>
+                    </div>
+                    <div style="display: inline-block;">
+                      <span>方向：</span>
+                      <span>东南</span>
+                    </div>
+                  </div>
+                  <div>
+                    <span>主油箱：</span>
+                    0.0(0.0)/0.0(0.0)
+                  </div>
+                  <div>
+                    <span>状态：</span>
+                    --
+                  </div>
+                  <div style="margin-bottom: 10px;">
+                    <span :class="[shareNum == '1' ? 'clickShare' : 'shareBtn']" @click="shareButClick(1)">0.5X</span>
+                    <span :class="[shareNum == '2' ? 'clickShare' : 'shareBtn']" @click="shareButClick(2)">1.5X</span>
+                    <!-- <span>
+                      <van-icon name="stop-circle" />
+                    </span>
+                    <span><van-icon name="pause-circle" /></span> -->
+                    
+                    <van-button class="share_btn_icon" color="#52B581" icon="stop-circle" type="primary" size="small"></van-button>
+                    <van-button color="#52B581" class="share_btn_icon" icon="pause-circle" type="primary" size="small"></van-button>
+                    <span :class="[shareNum == '3' ? 'clickShare' : 'shareBtn']" @click="shareButClick(3)">2.0X</span>
+                    <span :class="[shareNum == '4' ? 'clickShare' : 'shareBtn']" @click="shareButClick(4)">4.0X</span>
+                  </div>
+                  <div>
+                    <van-progress pivot-text="" color="#07C160" :percentage="50" />
+                  </div>
+                </div>
+              </div>
+            </el-footer>
+          </el-container>
+        </div>
+    </div>
+</body>
+<script>
+    let app = new Vue({
+        el: '#apps',
+        data: {
+            shareIcon:true,
+            shareNum:'2',
+            noIcon:false,
+            map: null,
+            isEmpty:false,
+            key:"",// 参数  加密串
+            shareTime:"",
+            effectiveInterval:0, // 有效时长
+            vid:"",// 分享车辆
+            btime:"",
+            etime:"",
+            orderNo:"",
+            av:"",
+            bufa:"",
+            adas:"",
+            tingche:"",
+            pshow:"",
+            pduration:"",
+            icon:0,
+            marker:null,
+        },
+        mounted() {
+          this.key="f2e2609af79598c4932eb277b494abdd",
+          this.effectiveInterval=12
+          this.vid=1407
+          this.shareTime='2021-02-07 09:24:21'
+          this.btime='2021-02-04 00:00:00'
+          this.etime='2021-02-04 23:59:59',
+          this.orderNo=0
+          this.av=0
+          this.bufa=0
+          this.adas=0
+          this.tingche=0
+          this.pshow=true
+          this.pduration=10
+          this.initMap();//初始化地图
+            // setTimeout(() => {
+            //     this.getQueryVariable();  // 获取参数
+            // })
+        },
+        methods: {
+            // 参数验证
+            parameterValidation(){
+                if(this.key=="" || this.shareTime == "" || this.effectiveInterval==""||this.vid==""||this.btime==""||this.etime==""){
+                    this.isEmpty = true;
+                    return;
+                }
+                if(this.orderNo==""||this.av==""||this.bufa==""||this.adas==""||this.tingche==""||this.pshow==""||this.pduration==""){
+                    this.isEmpty = true;
+                    return;
+                }
+                if(this.key==null|| this.shareTime == null || this.effectiveInterval==null||this.vid==null||this.btime==null||this.etime==null){
+                    this.isEmpty = true;
+                    return;
+                }
+                if(this.orderNo==null||this.av==null||this.bufa==null||this.adas==null||this.tingche==null||this.pshow==null||this.pduration==null){
+                    this.isEmpty = true;
+                    return;
+                }
+                this.shareTime = this.shareTime.replace("%20"," ");
+                this.btime = this.btime.replace("%20"," ");
+                this.etime = this.etime.replace("%20"," ");
+
+                let tempStr = this.shareTime+this.effectiveInterval+this.vid+"4G_admin";
+                let keyStr = md5(tempStr);
+                console.info("keyStr:" + keyStr + "<-->" +this.key);
+                if(this.key != keyStr){
+                    this.isEmpty = true;
+                    return;
+                }
+                console.info("shareTime->"+this.shareTime);
+                console.info("btime->"+this.btime);
+                console.info("etime->"+this.etime);
+                let date = new Date();
+                this.isOverdue(date.getTime());
+            },
+            isOverdue(longTime){
+                let temp = new Date(this.shareTime).getTime() + this.effectiveInterval * 60 * 60 * 1000;
+                if(longTime >= temp){
+                    this.isEmpty = true;
+                    return;
+                }
+                this.initMap();//初始化地图
+                this.loadtrackPlayData();
+            },
+            loadtrackPlayData(){
+                console.info("加载轨迹数据。。。。。");
+            },
+            // drawline(data){
+            //     if(data!=null && data.length > 0){
+            //         let path = [];
+                    
+            //         let polyline = new AMap.Polyline({
+            //             map: this.map,
+            //             path: path,
+            //             strokeColor: "#9901ff",  //线颜色
+            //             strokeWeight: 6,      //线宽
+            //             strokeStyle: "solid"  //线样式
+            //         });
+            //         this.map.setFitView([polyline]);
+            //         let imagePath = this.backImagePath(data[0],this.icon);
+            //         let cyIcon = new AMap.Icon({
+            //             size: new AMap.Size(32, 32), //图标大小
+            //             image: imagePath,
+            //         });
+            //         this.fifthhmarker = new AMap.Marker({
+            //         icon: cyIcon,
+            //         position: [res.data.data[0].lng,res.data.data[0].lat],
+            //         offset: new AMap.Pixel(-19, -13), //偏移量
+            //         });
+            //         this.marker = new 
+            //   }
+            // },
+            // 初始化地图
+            initMap(){
+                console.info("初始化地图");
+                this.map = new AMap.Map('container', {
+                    resizeEnable: true,
+                    dragEnable: false,
+                });
+            },
+            backImagePath(data,icon) {
+                let imagedir = this.backDirStr(data.dir);
+                let imagePath = "images/jiankong/pic/" + icon + "/";
+                let makerimage = "gray_0.png";
+                if(data.alarm == 0) {
+                    if (data.speed > 0) {
+                    makerimage = "green_" + imagedir + ".png";
+                    } else {
+                    if (data.stateStr.indexOf("停车超时") > -1) {
+                        makerimage = "blue_" + imagedir + ".png";
+                    } else {
+                        makerimage = "red_" + imagedir + ".png";
+                    }
+                    }
+                }else{
+                if (data.alarmStr!=undefined &&data.alarmStr.indexOf("超速报警") > -1) {
+                    makerimage = "pink_" + imagedir + ".png";
+                    } else {
+                    makerimage = "yellow_" + imagedir + ".png";
+                    }
+                }
+                return imagePath + makerimage;
+            },
+            /**返回反向对应的图片数值 */
+            backDirStr(dir) {
+                if((dir>=0 && dir<=23) || (dir>=338 && dir<=360)) return 0;
+                if (dir > 23 && dir < 68) return 45;
+                if (dir >= 68 && dir <= 113) return 90;
+                if (dir > 113 && dir <= 158) return 135;
+                if (dir >= 158 && dir <= 203) return 180;
+                if (dir > 203 && dir < 248) return 225;
+                if (dir >= 248 && dir <= 293) return 270;
+                if (dir > 293 && dir < 338) return 315;
+                else return 0;
+            },
+            //获取参数
+            getQueryVariable(variable){
+                let query = window.location.search.substring(1);
+                let parmas = query.split("&");
+                for (let i = 0; i < parmas.length; i++) {
+                    let tempparam = parmas[i].split("=");
+                    if(tempparam[0]=="key"){
+                        this.key = tempparam[1];
+                    }
+                    if(tempparam[0]=="shareTime"){
+                        this.shareTime = tempparam[1];
+                    }
+                    if(tempparam[0]=="effectiveInterval"){
+                        this.effectiveInterval = tempparam[1];
+                    }
+                    if(tempparam[0]=="vid"){
+                        this.vid = tempparam[1];
+                    }
+                    if(tempparam[0]=="btime"){
+                        this.btime = tempparam[1];
+                    }
+                    if(tempparam[0]=="etime"){
+                        this.etime = tempparam[1];
+                    }
+                    if(tempparam[0]=="orderNo"){
+                        this.orderNo = tempparam[1];
+                    }
+                    if(tempparam[0]=="av"){
+                        this.av = tempparam[1];
+                    }
+                    if(tempparam[0]=="bufa"){
+                        this.bufa = tempparam[1];
+                    }
+                    if(tempparam[0]=="adas"){
+                        this.adas = tempparam[1];
+                    }
+                    if(tempparam[0]=="tingche"){
+                        this.tingche = tempparam[1];
+                    }
+                    if(tempparam[0]=="pshow"){
+                        this.pshow = tempparam[1];
+                    }
+                    if(tempparam[0]=="pduration"){
+                        this.pduration = tempparam[1];
+                    }
+                }
+                this.parameterValidation(); // 参数验证
+            },
+            //切换显示/隐藏
+            shareIconClick(){
+              this.shareIcon = !this.shareIcon
+            },
+            //选择播放倍数
+            shareButClick(val){
+              this.shareNum = val
+            }
+        }
+    })
+</script>
+<style>
+    html {
+        font-size: 14px
+    }
+    *{
+        padding: 0px;
+        margin: 0px;
+        box-sizing: border-box;
+    }
+    .app,
+    .map {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0px;
+        top: 0px;
+    }
+    .amap-info-outer,
+    .amap-menu-outer {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+    .amap-info-outer {
+        width: 20rem;
+        border-radius: 0.29rem;
+    }
+    .map-info-wrap dl {
+        display: flex;
+    }
+    .map-info-wrap dl dd {
+        flex: 1
+    }
+    .map-info-wrap dl dt {
+        font-weight: bold;
+    }
+    .amap-info-close {
+        display: none;
+    }
+    .times {
+        position: absolute;
+        z-index: 2;
+        border-radius: 0.29rem;
+        width: 4rem;
+        text-align: center;
+        top: 1rem;
+        left: 1rem;
+        padding: 5px 6px;
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    }
+    .amap-icon img {
+        width: 100%;
+        height: 100%;
+    }
+    .coment_dom{
+      padding: 0px;
+      height: 100%;
+    }
+    .coment_icon{
+      text-align: center;
+      font-size: 38px;
+      color: #898989;
+      font-weight: 500;
+      line-height: 2px;
+    }
+    .coment_comment{
+      padding: 15px;
+    }
+    .coment_comment div{
+      line-height: 30px;
+      font-size: 16px;
+    }.coment_comment div span{
+      margin-right: 5px;
+    }
+    .shareBtn{
+      margin-right: 2px;
+      color: #999999;
+      background: #F5F5F5;
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+    .share_btn_icon{
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+    }
+    .clickShare{
+      margin-right: 2px;
+      color: #fff;
+      background: #52B581;
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+</style>
+</html>

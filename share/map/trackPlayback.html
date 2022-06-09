@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="format-detection" content="telephone=no, email=no" />
+    <script src="../../lib/axios.min.js"></script>
+    <script src="md5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+    <!-- 引入组件库 -->
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+    <script src="https://webapi.amap.com/maps?v=1.4.15&amp;key=311f25d6868ca0039f68575345df8e04&plugin=AMap.Polyline,AMap.Marker"></script>
+    <title></title>
+    <style>
+        html {
+            font-size: 14px;
+            background-color: #fafafa;
+        }
+
+        * {
+            padding: 0px;
+            margin: 0px;
+            box-sizing: border-box;
+            color: #fff;
+        }
+
+        .app {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0px;
+            top: 0px;     
+        }
+        #container {
+          width: 100%;
+          height: 100%;
+        }
+        #panel{
+            display: none;
+        }
+        .chaosu{
+            position: absolute;
+            top: 3.571429rem;
+            right: 1.428571rem;
+            width: 2.5rem;
+            height: 5.142857rem;
+            background-color: #fff;
+            z-index: 100;
+            text-align: center;
+        }
+        .one{
+            position: absolute;
+            top: 2.357143rem;
+            right: 1.428571rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+        .two{
+            position: absolute;
+            top: 7.142857rem;
+            right: 1.428571rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+        .background{
+            width: 100%;
+            height: 17rem;
+            background-color:#000;
+            opacity:0.7;
+            z-index: 199;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+        .details{
+            width: 100%;
+            height: 17rem;
+            z-index: 200;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            padding: .357143rem;
+            padding-top: 2.857143rem;
+        }
+        .details .text{
+            width: 5.714286rem;
+            height: 5.714286rem;
+            position: absolute;
+            top: -3.071429rem;
+            left: 1.5rem;
+            border-radius: 50%;
+            background-color: #3e7c77;
+            line-height: 5.714286rem;
+            text-align: center;
+        }
+        .details .text span{
+            font-size: 1rem;
+        }
+        .details .dizhi{
+            position: relative;
+            margin: .357143rem 0;
+        }
+        .details .dizhi div{
+            width: 1rem;
+            height: 1rem;
+            background-color: #26b23e;
+            border-radius: 50%;
+            position: absolute;
+            top: .285714rem;
+            left: .285714rem;
+        }
+        .details .dizhi p{
+            width: 1rem;
+            height: 1rem;
+            background-color: #ff2a3e;
+            border-radius: 50%;
+            position: absolute;
+            top: .285714rem;
+            left: .285714rem;
+        }
+        .details .dizhi span{
+            display: block;
+            width: .071429rem;
+            height: 2.071429rem;
+            background-color: #26b23e;
+            position: absolute;
+            top: 1.285714rem;
+            left: .714286rem;
+        }
+        .details .dizhi h6{
+            margin-left: 2.142857rem;
+            font-weight: 400;
+            font-size: 1rem;
+            height: 2.714286rem;
+        }
+        .details .xiangqing{
+            display: flex;
+        }
+        .details .xiangqing .box{
+            flex: 33%;
+            text-align: center;
+        }
+        .details .xiangqing .box div{
+            font-weight: 800;
+            font-size: 1.285714rem;
+        }
+        .details .xiangqing .box span{
+            font-weight: 400;
+            font-size: .857143rem;
+        }
+        .appurl{
+            width: 100%;
+            height: 2.642857rem;
+            line-height: 2.642857rem;
+            background-color: #191919;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .appurl a{
+            float: right;
+            color: #3c7e75;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div v-if="isEmpty">
+            <van-empty description="分享已失效" />
+        </div>
+        <!-- <div class="app"> -->
+        <div v-else class="app">
+            <div id="container"></div>
+            <div id="panel"></div>
+            <div class="chaosu">
+                <div style="color: #000;">{{chaosu}}</div>
+                <div style="color: #9a9a9a;">超速</div>
+                <div style="color: #000;">{{baojing}}</div>
+                <div style="color: #9a9a9a;">报警</div>
+            </div>
+            <div class="one"></div>
+            <div class="two"></div>
+            <div class="background"></div>
+            <div class="details">
+                <div class="text"><span style="font-size: 1.785714rem;">{{alarm.distance}}</span><span>KM</span></div>
+                <div class="time">{{shareTime}}</div>
+                <div class="dizhi"><div></div><span></span><h6>{{alarm.begin_posinfo}}</h6></div>
+                <div class="dizhi"><p></p><h6>{{alarm.end_posinfo}}</h6></div>
+                <div class="xiangqing">
+                    <div class="box">
+                        <div>{{alarm.dur}}</div>
+                        <span>行驶时长</span>
+                    </div>
+                    <div class="box">
+                        <div>{{alarm.avSpeed}}<span>KM/H</span></div>
+                        <span>平均速度</span>
+                    </div>
+                    <div class="box">
+                        <div>{{alarm.max_speed}}<span>KM/H</span></div>
+                        <span>最大速度</span>
+                    </div>
+                </div>
+            </div>
+            <div class="appurl">
+                <a v-if="appUrl" :href="appUrl">下载app功能更全面,点击立即体验！</a>
+            </div>
+        </div>
+        <!-- <div style="position: absolute;
+        top: 0;
+        left: 0;
+        color: #000;
+        background-color: #fff;">{{text}}</div> -->
+    </div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            isEmpty: false,
+            alarm:{},
+            alarmData:[],
+            time:'',
+            vid:0,
+            shareTime:'',
+            chaosu:0,
+            baojing:0,
+            appUrl: "",
+            map:null,
+            text:''
+        },
+        created(){
+            // this.load()   
+            try {
+                this.init() 
+                // this.loadList()
+            } catch (error) {
+                console.error(error)
+                this.isEmpty = true;
+                document.getElementById("app").style.display = "";
+            }       
+        },
+        mounted() {
+            // this.load()
+            // this.initMap()
+            try {
+                this.initMap()
+                // this.loadList()
+            } catch (error) {
+                console.error(error)
+                this.isEmpty = true;
+                document.getElementById("app").style.display = "";
+            }       
+        },
+        methods: {
+            init() {
+                let query = window.location.search.substring(1).split("&");
+                let p = {}
+                for (let i = 0; i < query.length; i++) {
+                    let item = query[i].split("=")
+                    p[item[0]] = item[1];
+                }
+                if (p['vid'] && p['btime'] && p['etime'] && p['shareTime']&& p['effectiveInterval']&& p['orderNo']&& p['av']&& p['bufa']&& p['adas']&& p['tingche']&& p['pshow']&& p['pduration']) {
+                    let code = p['shareTime'].replace("%20"," ") + "" + p['effectiveInterval'] + "" +p['vid'] + "" +  p['btime'].replace("%20"," ") + "" + p['etime'].replace("%20"," ") +p['orderNo']+''+p['av']+''+p['bufa']+''+p['adas']+''+p['tingche'] +'4G_admin';
+                    if (md5(code) != p['key']) {
+                        //签名错误，分享失效
+                        this.isEmpty = true;
+                        document.getElementById("app").style.display = "";
+                        return;
+                    }
+                } else {
+                    //缺少参数，分享失效
+                    this.isEmpty = true;
+                    document.getElementById("app").style.display = "";
+                    return;
+                }
+                //当前时间
+                let now = new Date().getTime();
+                //设置的失效时间(小时)
+                let exp = p['effectiveInterval'] * 60 * 60 * 1000;
+                //分享创建时间
+                let crt = new Date(p['shareTime'].replace("%20"," ")).getTime() * 1;
+                if ((crt + exp) < now) {
+                    //过期，分享失效
+                    this.isEmpty = true;
+                    document.getElementById("app").style.display = "";
+                    return;
+                }
+                let userAgent = navigator.userAgent;
+                if (userAgent.indexOf('iPhone') > -1 || userAgent.indexOf('iPad') > -1) {
+                    this.appUrl = "https://apps.apple.com/cn/app/%E5%B0%B1%E6%89%BE%E8%BD%A6/id1507355584"
+                } else if (userAgent.indexOf('Android') > -1 || userAgent.indexOf('Linux') > -1) {
+                    this.appUrl = "https://a.app.qq.com/o/simple.jsp?pkgname=com.exlive.videoapp"
+                }
+                if (p) {
+                    this.$toast.loading({
+                        duration: 0, // 持续展示 toast
+                        forbidClick: true,
+                        message: "加载中..."
+                    });
+                    this.load(p);
+                } else {
+                    this.isEmpty = true;
+                    document.getElementById("app").style.display = "";
+                }
+            },
+            initMap(){
+                //基本地图加载
+                this.map = new AMap.Map("container", {
+                    resizeEnable: true,
+                    zoom: 13 //地图显示的缩放级别
+                });
+            },
+            initLngLat(val){
+                var path = [];
+                for(var i =0;i<val.length;i+=1){
+                  path.push([val[i].lng,val[i].lat])
+                }
+                let polyline = new AMap.Polyline({
+                  path: path,
+                  borderWeight: 0,
+                  strokeColor: "#6AC044",
+                  strokeOpacity: 1,
+                  strokeWeight: 6,
+                  strokeStyle: "solid"
+                });
+                this.map.add(polyline)
+                this.map.setFitView()
+                this.$toast.clear()     
+            },
+            load(val){
+                // let time = '2021-04-01'
+                // let vid = 23671
+                let time = val.btime.slice(0,10)
+                let vid = val.vid
+                this.shareTime = val.shareTime.replace('%20',' ')
+                this.time = time
+                this.vid = vid
+                let data = {           
+                    // btime,
+                    // etime,
+                    time,
+                    vid,
+                    // sign:md5(vehicleId + btime + etime + 'e3traffic')
+                }
+                axios({
+                    url: '/video/report/traffic/public/newtrafficRecord',
+                    method: 'post',                 
+                    params:data
+                }).then((res)=>{
+                    this.alarm = res.data.data
+                    document.title = this.alarm.vehicle_name + ' (轨迹分享)'
+                    this.alarm.dur = this.formatDuring(this.alarm.dur)
+                    this.alarm.distance = parseInt(this.alarm.distance)
+                })
+                this.loadList()                             
+            },
+            loadList(){
+                let Strattime = this.time +' 00:00:00'
+                let endtime = this.time +' 23:59:59'
+                let vid = this.vid
+                let av = 1
+                let bufa = 1
+                let orderNo = 0
+                let tingchedian = 1
+                let data = {
+                    Strattime,
+                    endtime,
+                    vid,
+                    av,
+                    bufa,
+                    orderNo,
+                    tingchedian
+                }
+                axios({
+                    url: '/video/trajectory/public/guijilist',
+                    method: 'post',                 
+                    params:data
+                }).then((res)=>{   
+                    // this.text = res           
+                    let lng=parseFloat(res.data.data[0].lng)
+                    let lat=parseFloat(res.data.data[0].lat)
+                    let zlng=parseFloat(res.data.data[res.data.data.length-1].lng)
+                    let zlat=parseFloat(res.data.data[res.data.data.length-1].lat)
+                    let markerQ = new AMap.Marker({
+                      map: this.map,
+                      position: [lng, lat],
+                      offset: new AMap.Pixel(-20, -40),
+                      icon: new AMap.Icon({
+                        size: new AMap.Size(40, 40), // 图标尺寸
+                        image: "../../images/jiankong/qidian.png", //绝对路径
+                        imageSize: new AMap.Size(40, 40)
+                      })
+                    });
+                    let markerZ = new AMap.Marker({
+                      position: [zlng, zlat],
+                      offset: new AMap.Pixel(-20, -40),
+                      map: this.map,
+                      icon: new AMap.Icon({
+                        size: new AMap.Size(40, 40), // 图标尺寸
+                        image: "../../images/jiankong/zhongdian.png", //绝对路径
+                        imageSize: new AMap.Size(40, 40)
+                      })
+                    });
+                    // this.map.add(markerQ)
+                    // this.map.add(markerZ)
+                   this.initLngLat(res.data.data)
+                   let i = 0
+                   let y = 0
+                //    this.text = 111
+                   res.data.data.forEach(item=>{
+                       if(item.alarmStr!=''){
+                           i++
+                       }
+                       if(item.alarmStr.indexOf('超速报警')!=-1){
+                           y++
+                       }
+                   })
+                   this.baojing = i
+                   this.chaosu = y
+                }).catch(e=>{
+                    // this.text = e
+                })
+            },
+              formatDuring(value) {
+                let result = parseInt(value)
+                let h = Math.floor(result / 3600) < 10 ? '0' + Math.floor(result / 3600) : Math.floor(result / 3600);
+                let m = Math.floor((result / 60 % 60)) < 10 ? '0' + Math.floor((result / 60  % 60)) : Math.floor((result / 60 % 60));
+                let s = Math.floor((result % 60)) < 10 ? '0' + Math.floor((result % 60)) : Math.floor((result % 60));
+                let res = '';
+                if(h !== '00') res += `${h}:`;
+                if(m !== '00') res += `${m}:`;
+                res += `${s}`;
+                return res;
+              }
+        }
+    })
+    Vue.use(vant.Lazyload);
+</script>
+
+</html>

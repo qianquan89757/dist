@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>街景</title>
+  <script src="./js/vue.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script src="./js/vue-router.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+      html, body, #container {
+            height: 100%;
+            width: 100%;
+        }
+  </style>
+</head>
+
+<body style="background-color:#F7F7F7;">
+  <div class="van-nav-bar__content" style="background: rgb(47, 189, 81);">
+    <div id="clickLeft" class="van-nav-bar__left" style="color: white; font-size: 20px;">
+      <i class="van-icon van-icon-arrow-left van-nav-bar__arrow"><!----></i>
+    </div>
+    <div class="van-nav-bar__title van-ellipsis" style="color: white;font-size: 20px;">街景</div>
+  </div>
+  <div id="container" class="floating"> </div>
+  <script type="text/javascript" src="//api.map.baidu.com/api?v=3.0&ak=YVXeNpRyEhlayK1ufa7U79vwKhAmetUo"></script>
+  <script type="text/javascript">
+  //获取路由参数
+  function getQueryVariable(variable){
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){return pair[1];}
+    }
+    return(false);
+  } 
+  var locDate = getQueryVariable('location')
+  var pinot = locDate.split(',')
+  var toPiont = tobdMap(Number(pinot[0]), Number(pinot[1]))
+  console.log(toPiont);
+  //高德经纬度转换百度
+  function tobdMap(x, y) {
+    var x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+      var z = Math.sqrt(x * x + y * y) + 0.00002 * Math.sin(y * x_pi);
+      var theta = Math.atan2(y, x) + 0.000003 * Math.cos(x * x_pi);
+    var bd_lon = z * Math.cos(theta) + 0.0065;
+      var bd_lat = z * Math.sin(theta) + 0.006;
+    var pt =new BMap.Point(bd_lon, bd_lat);
+    return pt;
+  };
+  pawnorMap()
+  function pawnorMap(){
+    var panorama = new BMap.Panorama('container'); 
+    panorama.setPov({heading: -40, pitch: 6});
+    panorama.setOptions({
+        navigationControl: false //隐藏导航控件
+      });
+    panorama.setPosition(new BMap.Point(toPiont.lng,toPiont.lat));
+    var panoramaService = new BMap.PanoramaService();
+    panoramaService.getPanoramaByLocation(new BMap.Point(toPiont.lng,toPiont.lat), function(data){
+      if (data == null) {
+        window.Dialog.confirm({
+        message: '暂无街景',
+      })
+        .then(() => {
+          window.history.go(-1)
+        })
+        return;
+      }
+    });
+  }
+    document.getElementById("clickLeft").onclick = function(){ 
+      window.history.go(-1)
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="6" viewBox="0 0 12 2">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #6f6f6f;
+      }
+    </style>
+  </defs>
+  <rect id="最小化" class="cls-1" width="12" height="2" rx="1" ry="1"/>
+</svg>

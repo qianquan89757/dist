@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/vue.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script src="./js/vue-router.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+  <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    html, body,.car_container{
+        height: 100%;
+        width: 100%;
+    }
+    body ::-webkit-scrollbar { display: none; };
+    #container{
+      width: 100%;
+      height: 92.8%;
+    }
+    .van-overlay{
+      display: none;
+    }
+    .amap-logo{
+      display: none!important;
+    }
+    .amap-copyright{
+      display: none!important;
+    }
+    .content{
+      height: 500px;
+      overflow-y: auto;
+    }
+    #frame >>> .back{
+      display: none!important;
+    }
+    #frame >>> .common_beforefooter{
+      display: none!important;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="car_container" style="background-color:#F7F7F7;" v-cloak>
+    <!-- <van-nav-bar class="nav_bar" :title="title" left-arrow @click-left="onClickLeft" style="background: #2FBD51;">
+    </van-nav-bar> -->
+    <van-row>
+      <van-col span="24" style="padding: 15px 15px;">
+        <div id="container" class="floating" ref="container" v-html="timeExploit"></div>
+      </van-col>
+    </van-row>  
+    
+  </div>
+  <script src="https://webapi.amap.com/maps?v=1.4.15&key=a82816aece26858e288e775b1985b9e4"></script>
+  <script type="text/javascript">
+    let app =new Vue({
+      el: '#app',
+      data: {
+        show:true,
+        activeName: '1',
+        toPoint:[],
+        timeExploit:null,
+        uptimeDate:null,
+        cookieToken:null,
+        noticeId:"",
+      },
+      computed: {},
+      methods: {
+        //用户信息
+        userInfo(){
+          let that = this
+          let noticeId = Number(that.noticeId)
+          let params ={
+            id:noticeId,
+            upd:1
+          }
+          axios({
+                url: '/video/messageHistory/info',
+                method: 'post',
+                headers: { 'Authorization': that.cookieToken },
+                params:params
+            }).then(res=> {
+              if (res.data.code == '0000') {
+                that.title = res.data.data.title
+                that.timeExploit = res.data.data.content
+              }
+          }).catch(function (error) {
+            console.log(error);
+            // let data= "<p><span style=\"font-weight: bold;\">字体</span></p><p><span style=\"font-weight: bold; text-decoration-line: underline;\">撒旦发顺丰</span></p><p><span style=\"font-weight: bold; text-decoration-line: underline; background-color: rgb(194, 79, 74);\">sdfasfasdfafs阿萨</span></p><p><span style=\"font-weight: bold; text-decoration-line: underline; background-color: rgb(139, 170, 74);\">手动阀手动阀</span></p><p><span style=\"font-weight: bold; text-decoration-line: underline; color: rgb(70, 172, 200);\">sdfsdfsd</span></p>"
+            // that.title = "详情"
+            // that.timeExploit=data
+          });
+        },
+        //获取路由参数
+        getQueryVariable(variable){
+          var reg = new RegExp("(^|&)" + variable + "=([^&]*)(&|$)", "i"); 
+          var r = window.location.search.substr(1).match(reg);  //获取url中"?"符后的字符串并正则匹配
+          var context = ""; 
+          if (r != null) 
+              context = r[2]; 
+          reg = null; 
+          r = null; 
+          return context == null || context == "" || context == "undefined" ? "" : context; 
+          // var query = window.location.search.substring(1);
+          // var vars = query.split("&");
+          // for (var i=0;i<vars.length;i++) {
+          //         var pair = vars[i].split("=");
+          //         if(pair[0] == variable){return pair[1];}
+          // }
+          // return(false);
+        },
+        // 返回
+        onClickLeft() {
+          console.log('返回');
+          window.history.go(-1)
+        },
+      },
+      created(){
+      },  
+      beforeMount() {
+        console.log("挂载前生命周期");
+      },
+      mounted() {
+        console.log("挂载完成生命周期");
+        console.log(window.location.search.substring(1));
+        //this.cookieToken ="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjbGllbnRpZCI6ODcsInRraSI6NTQwOTgyNTY1NjUwMTczOTUyLCJyb2xlaWQiOjIsInVzZXJ0eXBlIjowLCJsdHAiOiJicyIsInR5cGVpZCI6MTUwMSwiZXhwIjoxNjA5MTg5OTYwMjUyLCJ1c2VyaWQiOjc3LCJzZXJ2ZXJpZCI6MzQsInVzZXJuYW1lIjoiYWRtaW4ifQ==.NzMwYTI5MjdiNzZjZjQ5ZGQzYzMzZTRiYzVmMTZjNTA="
+        this.cookieToken = this.getQueryVariable("token")
+        this.noticeId = this.getQueryVariable("noticeId") 
+        //this.cookieToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjbGllbnRpZCI6ODcsInRraSI6NTQzODc5MTM2ODMwMTY0OTkyLCJyb2xlaWQiOjIsInVzZXJ0eXBlIjowLCJsdHAiOiJhcHAiLCJ0eXBlaWQiOjE1MDEsImV4cCI6MTYwOTg4MDU1NjYzNywidXNlcmlkIjo3Nywic2VydmVyaWQiOjM0LCJ1c2VybmFtZSI6ImFkbWluIn0=.NGRlM2E3NTliYjkxMTQ1NjgzNTZjNWQ3ZmZiOGU4MWI="
+       // this.noticeId = "605292"
+        this.userInfo()
+      },
+      beforeDestroy() {
+        clearInterval(this.timeExploit);
+      },
+      watch: {
+        'message'() {
+          console.log("监视器调用");
+        }
+      }
+    })
+  </script> 
+</body>
+</html>

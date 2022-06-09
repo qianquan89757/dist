@@ -1,0 +1,50 @@
+/* 全局清除浮动 */
+.floating:after {
+  content: '';
+  height: 0;
+  line-height: 0;
+  display: block;
+  visibility: hidden;
+  clear: both;
+}
+/* 单行溢出隐藏 */
+.nowrap{
+  width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.concrete_car{
+  padding: 10px;
+}
+.concrete_title_conment{
+  font-size: 14px;
+  line-height: 30px;
+}
+.concrete_title_conment .concrete_title_left{
+  float: left;
+}
+.concrete_title_conment .concrete_title_right{
+  float: right;
+}
+.concrete_table{
+  width: 100%;
+  border:1px solid black;/*设置边框粗细，实线，颜色*/
+	text-align:center;/*文本居中*/
+	border-collapse: collapse;/*边框重叠，否则你会看到双实线*/
+}
+.concrete_table td{
+  border:1px solid black;
+  padding: 6px;
+}
+.concrete_canvas{
+  background: black;
+  height: 40px;
+  display: flex;
+  flex-wrap: nowrap;
+}
+.concrete_canvas div{
+  text-align: center;
+  width: 50%;
+  line-height: 50px;
+}

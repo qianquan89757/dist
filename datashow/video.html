@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html,
+        body,
+        .container {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+        }
+        body{
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body style="background-color:#00151a;">
+    <video id="video" class="container" src="" loop muted autoplay></video>
+    <script src="../lib/axios.min.js"></script>
+    <script>
+        let query = window.location.search.substring(1).split("&");
+        let params = {}
+        for (let i = 0; i < query.length; i++) {
+            let item = query[i].split("=")
+            params[item[0]] = item[1];
+        }
+        let tempUrl = "";
+        function load() {
+            axios({
+                url: '/video/datashow/public/adas/video',
+                method: 'post',
+                params: { clientid: params['clientid'], p: params['p'], t: params['t'] }
+            }).then(res => {
+                let url = res.data.data;
+                if (url != tempUrl) {
+                    document.getElementById("video").src = url;
+                    tempUrl = url;
+                }
+            })
+        }
+        load();
+        setInterval(load, 30 * 1000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>散点 - 全国市县经纬度</title>
+    <style>
+        html,
+        body,
+        .container {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .amap-logo {
+            display: none;
+            opacity: 0 !important;
+        }
+    </style>
+</head>
+
+<body style="background-color:#00151a;">
+    <div id="map" class="container"></div>
+    <script src="//webapi.amap.com/maps?v=1.4.15&key=848ff3d8f1c52fe2eafe37919c1b418d"></script>
+    <script src="//webapi.amap.com/loca?v=1.3.2&key=848ff3d8f1c52fe2eafe37919c1b418d"></script>
+    <script src="//a.amap.com/jsapi_demos/static/citys.js"></script>
+    <script src="../lib/axios.min.js"></script>
+    <script>
+        var map = new AMap.Map('map', {
+            mapStyle: 'amap://styles/d6a567a8b8d3819b2680ddd9c5cde4ac',
+            zoom: 3.0,
+            center: [108.9082, 37.9452]
+        });
+
+        var layer = new Loca.ScatterPointLayer({
+            map: map
+        });
+
+        // 配置样式
+        layer.setOptions({
+            unit: 'px',
+            style: {
+                radius: 1.2,     // 圆形半径，单位像素
+                color: '#14B4C9', // 填充颜色
+                borderWidth: 0.5,   // 边框宽度
+                borderColor: '#14B4C9'  // 边框颜色
+            }
+        });
+        let clientid = window.location.search.substring(10);
+        function load() {
+            axios({
+                url: '/video/datashow/public/map/position',
+                method: 'post',
+                params: { clientid: clientid }
+            }).then(res => {
+                // 传入原始数据
+                layer.setData(res.data.data, {
+                    lnglat: "lnglat"
+                });
+                layer.render();
+            })
+        }
+        load();
+        setInterval(load, 60 * 1000 * 3);
+    </script>
+</body>
+
+</html>

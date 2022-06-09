@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="./lib/vue.js"></script>
+    <script src="./lib/axios.min.js"></script>
+    <!-- 引入样式文件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css" />
+    <!-- Vant 的 JS 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+    <title>EXLIVE车联网综合服务平台</title>
+</head>
+
+<body>
+    <div v-cloak id="app" style="display: none;">
+        <div class="app" v-show="userid==0">
+            <div class="main">
+                <div class="logo">
+                    <div class="logo-img"></div>
+                    <p>EXLIVE车联网综合服务平台</p>
+                </div>
+
+                <div class="form-wrap">
+                    <!-- 切换 end-->
+                    <div class="form-tabs">
+                        <span :class="activeIndex===0 ? 'active':''" @click="tabHandle(0)">企业用户</span>
+                        <span :class="activeIndex===1 ? 'active':''" @click="tabHandle(1)">个人用户</span>
+                    </div>
+                    <!-- 切换 -->
+                    <!-- 表单 -->
+                    <div class="form">
+                        <div class="form-list">
+                            <span class="icon-server"><i></i></span>
+                            <input v-model.trim="host" type="text" placeholder="请输入服务器或域名" />
+                        </div>
+                        <div class="form-list">
+                            <span class="icon-user"><i></i></span>
+                            <input v-model.trim="username" type="text" placeholder="请输入账号" />
+                        </div>
+                        <div class="form-list">
+                            <span class="icon-pass"><i></i></span>
+                            <input v-model.trim="password" type="password" placeholder="请输入密码" />
+                        </div>
+                        <div class="form-list form-button">
+                            <button @click="login">登&nbsp;&nbsp;录</button>
+                        </div>
+                    </div>
+                    <!-- 表单 end-->
+                </div>
+            </div>
+        </div>
+        <!---->
+        <div class="success" v-show="userid>0">
+            <div class="success-area">
+                <i class="icon-success"></i>
+            </div>
+            <div class="success-text-area">
+                <h2 class="success-title">{{message}}</h2>
+                <p class="success-p">{{tips}}</p>
+            </div>
+            <div class="success-button">
+                <p class="success-button-area">
+                    <!-- <a href="javascript:;" class="success-button-primary" @click="handleClose">关闭页面</a> -->
+                    <a href="javascript:;" v-show="userid>0" class="success-button-default"
+                        @click="handleUnbind">解除绑定</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                activeIndex: 0,
+                openid: "",
+                host: "v3.exlive.cn",
+                username: "",
+                password: "",
+                message: "",
+                tips: "",
+                userid: -1,
+            }
+        },
+        mounted() {
+            let params = window.location.search.substr(1);
+            this.openid = params;
+            this.init();
+            document.getElementById("app").style.display = "block";
+        },
+        methods: {
+            tabHandle(e) {
+                this.activeIndex = e
+            },
+            login() {
+                if (!this.openid) {
+                    vant.Toast.fail('该页面已失效，请关闭后重新访问');
+                    return;
+                }
+                if (!this.host) {
+                    vant.Toast.fail('请输入服务器或域名');
+                    return;
+                }
+                if (!this.username) {
+                    vant.Toast.fail('请输入账号');
+                    return;
+                }
+                if (!this.password) {
+                    vant.Toast.fail('请输入密码');
+                    return;
+                }
+                vant.Toast.loading({
+                    duration: 0,
+                    message: '加载中...',
+                    forbidClick: true,
+                    loadingType: 'spinner',
+                });
+                let that = this;
+                axios({
+                    url: '/video/public/wechat/bind',
+                    method: 'post',
+                    params: {
+                        openid: this.openid,
+                        host: this.host,
+                        username: this.username,
+                        password: this.password,
+                        type: this.activeIndex
+                    }
+                }).then(res => {
+                    vant.Toast.clear();
+                    if (res.data.code == '0000') {
+                        let user = res.data.data;
+                        that.userid = user.userid;
+                        that.message = "绑定成功"
+                        if (user.type == 0) {
+                            that.tips = "已与平台 " + user.name + " 绑定";
+                        } else {
+                            that.tips = "已与车辆 " + user.name + " 绑定";
+                        }
+                    } else {
+                        vant.Toast.fail(res.data.message ? res.data.message : '操作失败');
+                    }
+                })
+            },
+            init() {
+                let that = this;
+                axios({
+                    url: '/video/public/wechat/info',
+                    method: 'post',
+                    params: {
+                        openid: this.openid
+                    }
+                }).then(res => {
+                    if (res.data.code == '0000') {
+                        let user = res.data.data;
+                        that.userid = user.userid;
+                        that.message = "绑定成功"
+                        if (user.type == 0) {
+                            that.tips = "已与平台 " + user.name + " 绑定";
+                        } else {
+                            that.tips = "已与车辆 " + user.name + " 绑定";
+                        }
+                    } else {
+                        that.message = "";
+                        that.tips = "";
+                        that.userid = 0;
+                    }
+                })
+            },
+            handleClose() {
+                window.close();
+            },
+            handleUnbind() {
+                let that=this;
+                axios({
+                    url: '/video/public/wechat/unbind',
+                    method: 'post',
+                    params: {
+                        openid: this.openid
+                    }
+                }).then(res => {
+                    if (res.data.code == '0000') {
+                        this.message = "";
+                        this.tips = "";
+                        this.userid = 0;
+                        vant.Toast.success('解绑成功');
+                    } else {
+                        that.message = "";
+                        that.tips = "";
+                        that.userid = 0;
+                    }
+                })
+            }
+        },
+    })
+</script>
+<style>
+    [v-cloak] {
+        display: none;
+    }
+
+    * {
+        margin: 0px;
+        padding: 0px;
+        box-sizing: border-box;
+        font-size: 12px;
+    }
+
+    .app {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0px;
+        left: 0px;
+        overflow: hidden;
+        background: url(./images/bg.jpg) no-repeat center;
+        background-size:100% 100%;
+    }
+
+    .main {
+        position: absolute;
+        width: 100%;
+        left: 0px;
+        top: 46%;
+        text-align: center;
+        transform: translate(0, -50%);
+    }
+
+    .logo {
+        text-align: center;
+    }
+
+    .logo p {
+        margin-top: 10px;
+        font-size: 18px;
+    }
+
+    .logo-img {
+        width: 50px;
+        height: 50px;
+        display: inline-block;
+        background: url(./images/logo.png) no-repeat center;
+        background-size: 100% 100%;
+    }
+
+    .form-wrap {
+        width: 80%;
+        display: inline-block;
+        background: #fff;
+        margin-top: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+        padding-bottom: 10px;
+    }
+
+    .form-tabs {
+        overflow: hidden;
+    }
+
+    .form-tabs span {
+        display: block;
+        text-align: center;
+        padding: 10px 0px;
+        padding-bottom: 15px;
+        width: 50%;
+        float: left;
+        position: relative;
+        font-size: 16px;
+    }
+
+    .form-tabs span.active {
+        color: #01b97e
+    }
+
+    .form-tabs span.active::after {
+        content: '';
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 3px;
+        background: #01b97e;
+        bottom: 2px;
+        left: 50%;
+        margin-left: -5px;
+    }
+
+    .form {
+        padding: 10px 20px;
+    }
+
+    .form-list {
+        border-bottom: 1px solid #f1f1f1;
+        display: flex;
+    }
+
+    .form-list span {
+        display: inline-block;
+        width: 30px;
+        height: 40px;
+        margin-right: 10px;
+    }
+
+    .form-list span i {
+        display: inline-block;
+        text-align: center;
+        width: 20px;
+        height: 20px;
+        margin-top: 10px;
+    }
+
+    .icon-server i {
+        background: url(./images/server.png) no-repeat center;
+        background-size: contain;
+    }
+
+    .icon-user i {
+        background: url(./images/user.png) no-repeat center;
+        background-size: contain;
+    }
+
+    .icon-pass i {
+        background: url(./images/pass.png) no-repeat center;
+        background-size: contain;
+    }
+
+    .form-list input {
+        border: none;
+        outline: none;
+        flex: 1;
+        font-size: 14px;
+    }
+
+    .form-button {
+        margin-top: 15px
+    }
+
+    .form-button button {
+        width: 100%;
+        border: none;
+        background: #01b97e;
+        color: #fff;
+        padding: 10px 0px;
+        border-radius: 10px;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .success {
+        padding-top: 36px;
+        text-align: center;
+    }
+
+    .success-area {
+        margin-bottom: 30px;
+    }
+
+    .icon-success {
+        display: inline-block;
+        width: 93px;
+        height: 93px;
+        background: url(./images/success.svg) no-repeat center;
+        background-size: contain;
+    }
+
+    .success-title {
+        margin-bottom: 5px;
+        font-weight: 400;
+        font-size: 20px;
+    }
+
+    .success-p {
+        font-size: 14px;
+        color: #999;
+    }
+
+    .success-button-area {
+        margin: 1.17647059em 15px .3em;
+    }
+
+    .success-button-area>a {
+        display: block;
+        font-size: 18px;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 5px;
+        overflow: hidden;
+        line-height: 2.55555556;
+    }
+
+    .success-button-primary {
+        color: #fff;
+        background-color: #01b97e;
+    }
+
+    .success-button-default {
+        color: #000;
+        margin-top: 15px;
+        background-color: #f8f8f8;
+        border: 1px solid rgba(0, 0, 0, .2);
+    }
+</style>

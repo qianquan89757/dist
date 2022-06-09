@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="ui/ui.css" />
+    <script src="vue.js"></script>
+    <script src="axios.min.js"></script>
+    <script src="ui/ui.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <title></title>
+</head>
+
+<body>
+    <div v-clock id="storage"> 
+      <div style="margin-top: 30px;padding:0px 30px;">
+        <p style="text-align: center;margin-bottom:20px;color: #666;">查询数据表大于100万条的数据表</p>
+        <el-table
+         width="100%"
+         :border="true"
+         :stripe="true"
+         :data="list"
+         :empty-text="list === null ? ' ' : '无数据'"
+        >
+            <el-table-column
+                prop="tableName"
+                label="数据表名"
+                align="center"
+               >
+            </el-table-column>
+            <el-table-column
+                prop="tableRows"
+                label="数据条数"
+                align="center"
+                >
+            </el-table-column>
+        </el-table>
+        <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="param.pageNum"
+            :page-size="param.pageSize"
+            layout="total, sizes, prev, pager, next"
+            :total="total">
+        </el-pagination>
+      </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    const app = new Vue({
+        el: '#storage',
+        data() {
+            return {
+               param:{
+                 pageNum:1,
+                 pageSize:10
+               },
+               total:0,
+               list:null
+            }
+        },
+        mounted() {
+            this.query()
+        },
+        methods: {
+            query(){
+                let p=Object.assign({},this.param)
+                let that=this
+                axios({
+                    url: '/video/public/DatabaseInfo/query',
+                    method: 'post',
+                    data:p
+                }).then(res => {
+                  if(res.data.code==='0000'){
+                     that.list=res.data.data.pageList
+                     console.log(that.list)
+                     that.total=res.data.data.total
+                  }else{
+                      that.$message.error(res.data.message)
+                  }
+                })
+            },
+            handleCurrentChange(val){
+                this.param.pageNum=val;
+                this.query()
+            },
+            handleSizeChange(val){
+                this.param.pageNum=1;
+                this.param.pageSize=val;
+                this.query()
+            }
+           
+        }
+    })
+</script>
+<style>
+#storage .el-table td,#storage .el-table th.is-leaf{
+    border-bottom: 1px solid #EBEEF5;
+}
+#storage .el-table td.is-center,#storage .el-table th.is-center {
+    text-align: center;
+}
+#storage .el-table--border td, 
+#storage .el-table--border th, 
+#storage .el-table__body-wrapper 
+#storage .el-table--border.is-scrolling-left~.el-table__fixed{
+    border-color: #e3e4e4;
+}
+#storage .el-table th,#storage .el-table thead.is-group th{background: #eaf0f5;}
+#storage .el-table .is-center{color: #070707;}
+#storage .el-table td,#storage .el-table th{padding: 5px 0px;}
+#storage .el-pagination {margin-top: 30px;text-align: right;}
+</style>

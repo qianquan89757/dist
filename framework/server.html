@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="ui/ui.css" />
+    <script src="vue.js"></script>
+    <script src="axios.min.js"></script>
+    <script src="ui/ui.js"></script>
+    <script src="ui/moment.min.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <title>exlive3.0 运行监控</title>
+</head>
+
+<body>
+    <div v-clock id="server">
+        <div class="server-intro">
+            <dl>
+                <dt>服务器名称：</dt>
+                <dd>{{server.title}}</dd>
+            </dl>
+            <dl>
+                <dt>服务器IP：</dt>
+                <dd>{{server.ip}}</dd>
+            </dl>
+            <dl>
+                <dt>平台版本：</dt>
+                <dd>{{server.version}}</dd>
+            </dl>
+            <dl>
+                <dt>数据更新时间： </dt>
+                <dd>
+                    <span>{{date}}</span>
+                </dd>
+            </dl>
+            <dl>
+                <dt>运行状态： </dt>
+                <dd>
+                    <span class="error" v-if="isError">异常</span>
+                    <span class="normal" v-else>正常</span>
+                </dd>
+            </dl>
+        </div>
+        <div class="server-table">
+            <table>
+                <tr>
+                    <td style="font-weight: bold;">车辆总数</td>
+                    <td style="font-weight: bold;">在线车辆数</td>
+                    <td style="font-weight: bold;">exrecver<br/>（接收）</td>
+                    <td style="font-weight: bold;">exparser<br/>（解析）</td>
+                    <td style="font-weight: bold;">exmqserver<br/>（MQ1）</td>
+                    <td style="font-weight: bold;">exmqsbroker<br/>（MQ2）</td>
+                    <td style="font-weight: bold;">exadas<br/>（adas服务）</td>
+                    <td style="font-weight: bold;">exmedia<br/>（视频服务）</td>
+                    <td style="font-weight: bold;">ftp<br/>（ftp服务）</td>
+                </tr>
+                <tr>
+                    <td>{{server.vehicle.count}}</td>
+                    <td>{{server.vehicle.online}}</td>
+                    <td>
+                        <span v-if="js===''">-</span>
+                        <span class="error" v-if="js===0">异常</span>
+                        <span class="normal" v-if="js===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="jx===''">-</span>
+                        <span class="error" v-if="jx===0">异常</span>
+                        <span class="normal" v-if="jx===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="mq===''">-</span>
+                        <span class="error" v-if="mq===0">异常</span>
+                        <span class="normal" v-if="mq===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="mq2===''">-</span>
+                        <span class="error" v-if="mq2===0">异常</span>
+                        <span class="normal" v-if="mq2===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="adas===''">-</span>
+                        <span class="error" v-if="adas===0">异常</span>
+                        <span class="normal" v-if="adas===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="media===''">-</span>
+                        <span class="error" v-if="media===0">异常</span>
+                        <span class="normal" v-if="media===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="ftp===''">-</span>
+                        <span class="error" v-if="ftp===0">异常</span>
+                        <span class="normal" v-if="ftp===1">正常</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">elasticsearch<br/>（ES数据库）</td>
+                    <td style="font-weight: bold;">mysql<br/>（mysql数据库）</td>
+                    <td style="font-weight: bold;">exreport<br/>（报表）</td>
+                    <td style="font-weight: bold;">redis<br/>（缓存数据库）</td>
+                    <td style="font-weight: bold;">exjt808<br/>（808转发）</td>
+                    <td style="font-weight: bold;">exjt809<br/>（809转发）</td>
+                    <td style="font-weight: bold;">exdataserver<br/>（4G后台）</td>
+                    <td style="font-weight: bold;">nginx<br/>（负载网关）</td>
+                    <td style="font-weight: bold;">exwebserver<br/>（前端服务）</td>
+                </tr>
+                <tr>
+                    <td>
+                        <span v-if="es===''">-</span>
+                        <span class="error" v-if="es===0">异常</span>
+                        <span class="normal" v-if="es===1">正常</span>
+                    </td>
+
+                    <td>
+                        <span v-if="mysql===''">-</span>
+                        <span class="error" v-if="mysql===0">异常</span>
+                        <span class="normal" v-if="mysql===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="report===''">-</span>
+                        <span class="error" v-if="report===0">异常</span>
+                        <span class="normal" v-if="report===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="redis===''">-</span>
+                        <span class="error" v-if="redis===0">异常</span>
+                        <span class="normal" v-if="redis===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="jt808===''">-</span>
+                        <span class="error" v-if="jt808===0">异常</span>
+                        <span class="normal" v-if="jt808===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="jt809===''">-</span>
+                        <span class="error" v-if="jt809===0">异常</span>
+                        <span class="normal" v-if="jt809===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="video===''">-</span>
+                        <span class="error" v-if="video===0">异常</span>
+                        <span class="normal" v-if="video===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="nginx===''">-</span>
+                        <span class="error" v-if="nginx===0">异常</span>
+                        <span class="normal" v-if="nginx===1">正常</span>
+                    </td>
+                    <td>
+                        <span v-if="webserver===''">-</span>
+                        <span class="error" v-if="webserver===0">异常</span>
+                        <span class="normal" v-if="webserver===1">正常</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="font-weight: bold;">总内存</td>
+                    <td style="font-weight: bold;">当前使用内存</td>
+                    <td style="font-weight: bold;">CPU</td>
+                    <td style="font-weight: bold;">当前使用CPU</td>
+                    <td style="font-weight: bold;">磁盘空间</td>
+                    <td style="font-weight: bold;">当前使用磁盘空间</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>{{server.mem.total}}G</td>
+                    <td>{{server.mem.usage}}%</td>
+                    <td>{{server.cpu.cores}}核</td>
+                    <td>{{server.cpu.usage}}%</td>
+                    <td>
+                        <div v-for="item in server.disk" :key="item.name">
+                            <span>{{item.name}}盘:</span>
+                            <span>{{item.total}}G</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div v-for="item in server.disk" :key=`${item.usage}2`>
+                            <span>{{item.name}}盘已用:</span>
+                            <span>{{item.usage}}%</span>
+                        </div>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    let timer = null
+    const app = new Vue({
+        el: '#server',
+        data() {
+            return {
+                js: '', //接收
+                jx: '', //解析
+                media: '', //视频服务
+                ftp: '',
+                video: '', //4G后台
+                disk: '', //磁盘
+                report: '', //报表
+                es: '',
+                mq: '',
+                mq2: '',
+                redis: '',
+                jt808: '',
+                jt809: '',
+                adas: '',
+                mysql: '',
+                nginx: '',
+                webserver: '',
+                isError: false,
+                server: {
+                    title: '-',
+                    version: '-',
+                    ip: '-',
+                    vehicle: {
+                        count: '-',
+                        online: '-'
+                    },
+                    cpu: {
+                        cores: '-',
+                        usage: '-'
+                    },
+                    disk: [],
+                    mem: {
+                        total: '-',
+                        usage: ''
+                    }
+                },
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            }
+        },
+        mounted() {
+            this.query()
+            this.sysquery()
+            timer = setInterval(() => {
+                this.query()
+                this.sysquery()
+                this.date = moment().format('YYYY-MM-DD HH:mm:ss')
+            }, 60 * 1000 * 3)
+        },
+        destroyed() {
+            clearInterval(timer)
+        },
+        methods: {
+            query() {
+                axios({
+                    url: '/video/public/jmx/monitor',
+                    method: 'get',
+                }).then(res => {
+                    let str = res.data
+                    let parser = new DOMParser();
+                    let xmlDoc = parser.parseFromString(str, "text/xml");
+                    let xmlDom = xmlDoc.getElementsByTagName('app');
+                    this.js = 1 //接收
+                    this.jx = 1 //解析
+                    this.media = 1 //视频服务
+                    this.video = 1 //4G后台
+                    this.report = 1 //报表
+                    this.es = 1
+                    this.mq = 1
+                    this.redis = 1
+                    this.jt808 = 1
+                    this.jt809 = 1
+                    this.adas = 1
+                    let infoObj={}
+                    for (let i = 0; i < xmlDom.length; i++) {
+                        let appname = xmlDom[i].getElementsByTagName('appname')[0].textContent
+                        let activetime = xmlDom[i].getElementsByTagName('activetime')[0].textContent
+                        let reg = /\[(.+?)\]/g;
+                        let sReg = appname.match(reg)
+                        let s = RegExp.$1
+                        let appContent=appname.replace(reg,'')
+                        
+                        if (s === 'ES') {
+                            this.es = 0
+                            infoObj.es==appContent
+                            this.isError = true
+                        }
+                        if (s === 'MQ') {
+                            this.mq = 0
+                            infoObj.mq=appContent
+                            this.isError = true
+                        }
+                        if (s === 'REDIS') {
+                            this.redis = 0
+                            infoObj.redis=appContent
+                            this.isError = true
+                        }
+                        if (s === 'JT808') {
+                            this.jt808 = 0
+                            infoObj.jt808=appContent
+                            this.isError = true
+                        }
+                        if (s === 'JT809') {
+                            this.jt809 = 0
+                            infoObj.jt809=appContent
+                            this.isError = true
+                        }
+                        if (s === 'ADAS') {
+                            this.adas = 0
+                            infoObj.adas=appContent
+                            this.isError = true
+                        }
+                        if (s === '接收') {
+                            this.js = 0
+                            infoObj.js=appContent
+                            this.isError = true
+                        }
+                        if (s === '解析') {
+                            this.jx = 0
+                            infoObj.jx=appContent
+                            this.isError = true
+                        }
+                        if (s === '多媒体') {
+                            this.media = 0
+                            infoObj.media=appContent
+                            this.isError = true
+                        }
+                        if (s === '后台(在线)') {
+                            this.video = 0
+                            infoObj.video=appContent
+                            this.isError = true
+                        }
+                        if (s === '报表') {
+                            this.report = 0
+                            infoObj.report=appContent
+                            this.isError = true
+                        }
+                        let that = this
+                        window.parent.postMessage({
+                            msg: {
+                                es: that.es,
+                                mq: that.mq,
+                                redis: that.redis,
+                                jt808: that.jt808,
+                                jt809: that.jt809,
+                                adas: that.adas,
+                                js: that.js,
+                                jx: that.jx,
+                                media: that.media,
+                                video: that.video,
+                                report: that.report,
+                                infoObj:infoObj
+                            }
+                        }, '*');
+                    };
+
+                })
+            },
+            sysquery() {
+                axios({
+                    url: '/video/home/jmx/public/info',
+                    method: 'post',
+                }).then(res => {
+                    if (res.data.code === '0000') {
+                        this.server = res.data.data
+                    }
+                })
+            },
+
+        }
+    })
+</script>

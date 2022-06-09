@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no">
+    <script src="./axios.min.js"></script>
+    <script src="./vue.js"></script>
+    <script src="./md5.js"></script>
+    <script src="https://webapi.amap.com/maps?v=1.4.15&amp;key=311f25d6868ca0039f68575345df8e04&plugin=AMap.ToolBar,AMap.TileLayer"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+    <title></title>
+    <style>
+        html {
+            font-size: 14px
+        }
+        
+        * {
+            padding: 0px;
+            margin: 0px;
+            box-sizing: border-box;
+        }
+        
+        .app,
+        .map {
+            position: absolute;
+            width: 100%;
+            /* height: calc(100% - 2.642857rem); */
+            height: 100%;
+            left: 0px;
+            top: 0px;
+        }
+        
+        .amap-info-outer,
+        .amap-menu-outer {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .amap-info-outer {
+            width: 20rem;
+            border-radius: 0.29rem;
+        }
+        
+        .map-info-wrap dl {
+            display: flex;
+        }
+        
+        .map-info-wrap dl dd {
+            flex: 1
+        }
+        
+        .map-info-wrap dl dt {
+            font-weight: bold;
+        }
+        
+        .amap-info-close {
+            display: none;
+        }
+        
+        .times {
+            position: absolute;
+            z-index: 2;
+            border-radius: 0.29rem;
+            width: 4rem;
+            text-align: center;
+            top: 1rem;
+            left: 1rem;
+            padding: 5px 6px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .amap-icon img {
+            width: 100%;
+            height: 100%;
+        }
+        .appurl {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2.642857rem;
+            line-height: 2.642857rem;
+            background-color: #191919;
+        }
+        .appurl a{
+            float: right;
+            color: #3c7e75;
+        }
+        .amap-controls .amap-toolbar {
+            bottom: 0;
+            top: 0;
+        }
+        .amap-controls .amap-zoomcontrol {
+            bottom: 74%;
+        }
+        .amap-touch-toolbar .amap-zoomcontrol:after{
+            top: 3.285714rem;
+        }
+        .images {
+            position: absolute;
+            background-color: #fff;
+            top: 1.285714rem;
+            right: 1.142857rem;
+            width: 2.142857rem;
+            height: 2.142857rem;
+            text-align: center;
+            padding-top: .357143rem;
+            border-radius: .571429rem;
+            z-index: 1000;
+        }
+        .images img{
+            width: 1.428571rem;
+        }
+        .imgBox{
+            position: absolute;
+            display: flex;
+            top: .857143rem;
+            right: 3.714286rem;
+            width: 10rem;
+            background-color: #fff;
+            padding: .357143rem;
+            padding-right: 0;
+            flex-wrap: wrap;
+            z-index: 1000;
+            justify-content: flex-end;
+        }
+        .imgBox div{
+            flex: 1;
+            text-align: center;
+        }
+        .imgBox div img{
+            width: 2.857143rem;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="apps">
+        <div v-if="isEmpty">
+            <van-empty description="分享已失效" />
+        </div>
+        <div v-else>
+            <div class="times">
+                <span>{{time}}s</span>
+            </div>
+            <div class="map" id="container"></div>
+            <div class="images" @click="clickImg">
+                <img src="./images/tuceng.png">
+            </div>
+            <div class="imgBox" v-if="showPopover">
+                <div @click="standard">
+                    <img :src="biaozhun">
+                    <span>标准</span>
+                </div>
+                <div @click="satellite">
+                    <img :src="weixing">
+                    <span>卫星</span>
+                </div>
+                <div @click="roadCondition">
+                    <img :src="lukuang">
+                    <span>路况</span>
+                </div>
+            </div>
+            <div class="appurl">
+                <a v-if="appUrl" :href="appUrl">下载app功能更全面,点击立即体验！</a>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    let timeInit = 30
+
+    function getQueryVariable(variable) {
+        let query = window.location.search.substring(1);
+        let vars = query.split("&");
+        for (let i = 0; i < vars.length; i++) {
+            let pair = vars[i].split("=");
+            if (pair[0] == variable) {
+                return pair[1];
+            }
+        }
+        return (false);
+    }
+
+    function handleTime(variable) {
+        let vars = variable.split("%20");
+        let str = vars[0] + ' ' + vars[1]
+        return str
+    }
+    let app = new Vue({
+        el: '#apps',
+        data: {
+            map: null,
+            lg: [],
+            time: timeInit,
+            param: {
+                effectiveInterval: 0,
+                key: "",
+                startTime: "",
+                vid: 0
+            },
+            value: {
+                address: '-',
+                lat: '-',
+                lng: '-',
+                recvtime: '-',
+                speed: '-',
+                state: '-',
+                stateStr: '-',
+                temp: '-',
+                today_distance: '-',
+                vehicle_name: '-'
+            },
+            iconPath: {
+                dir: '../../images/jiankong/pic/',
+                dirName: '',
+                iconName: '',
+                iconAngle: '0'
+            },
+            isEmpty: false,
+            iconUrl: '',
+            appUrl: "",
+            showPopover: false,
+            biaozhun:'./images/biaozhuans.png',
+            weixing:'./images/weixingn.png',
+            lukuang:'./images/lukuangn.png',
+            roadConditionShow:null,
+            trafficLayer:null,
+            satelliteLayer:null
+        },
+        mounted() {
+            setTimeout(() => {
+                this.isOverTime()
+                this.initMap()
+                this.requestAction()
+                this.freshTime()
+            })
+        },
+        // computed: {
+        //     iconUrl() {
+        //         return this.iconPath.dir + this.iconPath.dirName + '/' + this.iconPath.iconName + '_' + this.iconPath.iconAngle + '.png'
+        //     }
+        // },
+        methods: {
+            clickImg(){
+                this.showPopover = !this.showPopover
+            },
+            isOverTime() {
+                let ot = new Date(handleTime(getQueryVariable('startTime')).replace(/-/g, '/')).getTime()
+                let n = new Date().getTime()
+                let m = (n - ot) / 1000 / 60 / 60
+                if (m >= Number(getQueryVariable('effectiveInterval'))) {
+                    this.isEmpty = true
+                    return
+                }
+            },
+            requestAction() {
+                this.getParam()
+                if (this.param.key !== getQueryVariable('id')) {
+                    this.isEmpty = true
+                }
+                let userAgent = navigator.userAgent;
+                if (userAgent.indexOf('iPhone') > -1 || userAgent.indexOf('iPad') > -1) {
+                    this.appUrl = "https://apps.apple.com/cn/app/%E5%B0%B1%E6%89%BE%E8%BD%A6/id1507355584"
+                } else if (userAgent.indexOf('Android') > -1 || userAgent.indexOf('Linux') > -1) {
+                    this.appUrl = "https://a.app.qq.com/o/simple.jsp?pkgname=com.exlive.videoapp"
+                }
+                let param = this.param
+                let that = this
+                this.lg = []
+                axios({
+                    url: `/video/monitor/public/getPositionByVid?effectiveInterval=${param.effectiveInterval}&key=${param.key}&startTime=${param.startTime}&vid=${param.vid}`,
+                }).then((res) => {
+                    if (res.data.code = "0000") {
+                        that.value = res.data.data[0]
+                        document.title = this.value.vehicle_name + ' (实时位置)'
+                        that.lg.push(that.value.lng, that.value.lat)
+                        this.iconUrl = '../..' + that.value.image
+                            // this.iconfunc(res.data.data[0])
+                        that.reLoadMarker()
+                    }
+                })
+            },
+            getParam() {
+                let keystr = null
+                this.param.startTime = handleTime(getQueryVariable('startTime'))
+                this.param.effectiveInterval = Number(getQueryVariable('effectiveInterval'))
+                this.param.vid = parseInt(getQueryVariable('vid'))
+                keystr = this.param.startTime + this.param.vid.toString() + this.param.effectiveInterval.toString() + "4G_admin"
+                this.param.key = md5(keystr)
+            },
+            freshTime() {
+                setInterval(() => {
+                    if (this.time > 0) {
+                        this.time = this.time - 1
+                    } else {
+                        this.requestAction()
+                        this.time = timeInit
+                    }
+                }, 1000)
+            },
+            initMap() {
+                this.map = new AMap.Map('container', {
+                    resizeEnable: true,
+                    dragEnable: true,
+                    //zoom: 13, //初始化地图层级
+                });
+                AMap.plugin(['AMap.ToolBar',], ()=>{
+                    // 在图面添加工具条控件，工具条控件集成了缩放、平移、定位等功能按钮在内的组合控件
+                    this.map.addControl(new AMap.ToolBar({
+                        // 简易缩放模式，默认为 false
+                        liteStyle: true
+                    }));
+                });
+            },
+            reLoadMarker() {
+                this.map.clearMap();
+                this.loadLayer(this.value, this.lg)
+            },
+            // iconfunc(e) {
+            //     let speed = parseInt(e.speed)
+            //     this.iconPath.dirName = e.icon
+            //     if (e.online) {
+            //         if (e.alarm == 0) {
+            //             if (speed > 0) {
+            //                 this.iconPath.iconName = 'green';
+            //             } else {
+            //                 if (e.stateStr.indexOf("停车超时") > -1) {
+            //                     this.iconPath.iconName = "blue";
+            //                 } else {
+            //                     this.iconPath.iconName = "red";
+            //                 }
+            //             }
+
+            //         } else {
+            //             if (e.alarmStr.indexOf("超速报警") > -1) {
+            //                 this.iconPath.iconName = "pink";
+            //             } else {
+            //                 this.iconPath.iconName = "yellow";
+            //             }
+            //         }
+            //     } else {
+            //         this.iconPath.iconName = 'gray';
+            //     }
+            // },
+            loadLayer(value, lg) {
+                let iconDir = this.iconUrl
+                    //构建Marker
+                let map = this.map
+                    // 创建一个 Icon
+                var startIcon = new AMap.Icon({
+                    // 图标尺寸
+                    size: new AMap.Size(34, 34),
+                    // 图标的取图地址
+                    image: iconDir,
+                    // 图标所用图片大小
+                    //imageSize: new AMap.Size(40, 40),
+                    // 图标取图偏移量
+                    imageOffset: new AMap.Pixel(0, 0)
+                });
+                let marker = new AMap.Marker({
+                    icon: startIcon,
+                    position: lg //位置
+                })
+
+                let content = `
+                   <div class="map-info-wrap">
+                       <dl>
+                          <dt>车牌：</dt>
+                          <dd>${value.vehicle_name}</dd> 
+                       </dl>
+                       <dl>
+                          <dt>速度：</dt>
+                          <dd>${value.speed}km/h</dd> 
+                       </dl>
+                       <dl>
+                          <dt>当日里程：</dt>
+                          <dd>${value.today_distance}km</dd> 
+                       </dl>
+                       <dl>
+                          <dt>温度：</dt>
+                          <dd>${value.temp}</dd> 
+                       </dl>
+                       <dl>
+                          <dt>服务器时间：</dt>
+                          <dd>${value.recvtime}</dd> 
+                       </dl>
+                       <dl>
+                          <dt>状态：</dt>
+                          <dd>${value.stateStr}</dd> 
+                       </dl>
+                       <dl>
+                          <dt>位置：</dt>
+                          <dd>${value.address}</dd> 
+                       </dl>
+                    </div> 
+                `
+                    // content.push("电话：010-64733333")
+                    //构建自定义信息窗体
+                let infoWindow = new AMap.InfoWindow({
+                    content: content,
+                    offset: new AMap.Pixel(8, -36)
+                });
+                map.add(marker); //marker添加到地图
+                infoWindow.open(map, lg) //marker打开信息窗体
+                map.setFitView();
+            },
+            standard(){
+                this.biaozhun = './images/biaozhuans.png'
+                this.weixing = './images/weixingn.png'
+                this.lukuang = './images/lukuangn.png'
+                if(this.roadConditionShow) this.trafficLayer.hide();
+                if(this.satelliteLayer!=null) {
+                    this.map.remove(this.satelliteLayer);
+                    this.satelliteLayer = null
+                }
+            },
+            satellite(){
+                this.biaozhun = './images/biaozhuann.png'
+                this.weixing = './images/weixings.png'
+                this.lukuang = './images/lukuangn.png'
+                if(this.roadConditionShow) this.trafficLayer.hide();
+                if(this.satelliteLayer == null){
+                    this.satelliteLayer = new AMap.TileLayer.Satellite();
+                    this.map.add(this.satelliteLayer);
+                }
+            },
+            roadCondition(){
+                this.biaozhun = './images/biaozhuann.png'
+                this.weixing = './images/weixingn.png'
+                this.lukuang = './images/lukuangs.png'
+                if(this.satelliteLayer!=null) {
+                    this.map.remove(this.satelliteLayer);
+                    this.satelliteLayer = null
+                }
+                if(this.roadConditionShow==null){
+                    this.trafficLayer = new AMap.TileLayer.Traffic({
+                        zIndex: 10
+                    });
+                    this.trafficLayer.setMap(this.map);
+                }else{
+                    this.trafficLayer.show();
+                }
+                this.roadConditionShow = true
+            }
+        }
+    })
+</script>
+
+</html>

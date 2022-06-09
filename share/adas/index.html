@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="format-detection" content="telephone=no, email=no" />
+    <script src="../../lib/axios.min.js"></script>
+    <script src="md5.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+    <!-- 引入组件库 -->
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+    <title></title>
+    <style>
+        html {
+            font-size: 14px
+        }
+
+        * {
+            padding: 0px;
+            margin: 0px;
+            box-sizing: border-box;
+        }
+
+        .app {
+            padding: 15px;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0px;
+            top: 0px;
+        }
+
+        .video {
+            width: 100%;
+            height: 12rem;
+            /* border: 1px solid #e4e4e4; */
+            /* background: #000; */
+        }
+
+        .video video {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+        }
+
+        .adas-info {
+            margin-top: 1.2rem;
+        }
+
+        .info-title {
+            margin-bottom: 0.8rem
+        }
+
+        .info-title h4,
+        .info-title span {
+            display: block;
+        }
+
+        .info-title h4 {
+            flex: 1;
+            font-size: 1.2rem;
+        }
+
+        .info-title span {
+            width: 1.3rem;
+            height: 1.3rem;
+            background: url(./icon-download.svg) no-repeat center;
+            background-size: contain;
+        }
+
+        .info-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-list span {
+            color: #585858;
+            font-size: 1.1rem;
+        }
+
+        .info-list+.info-list {
+            margin-top: 0.4rem
+        }
+
+        .app-download {
+            width: 100%;
+            margin-top: 2rem;
+            background: #01b87f;
+            height: 4rem;
+            padding: 0px 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .download-logo {
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .download-logo span {
+            display: inline-block;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .download-logo span:first-child {
+            width: 3rem;
+            height: 3rem;
+            margin-right: 0.5rem;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.25rem;
+        }
+
+        .download-logo span:first-child img {
+            width: 80%;
+            height: 80%;
+        }
+
+        .app-download a {
+            padding: 0.5rem 1.1rem;
+            display: block;
+            border-radius: 0.25rem;
+            background: #fff;
+            font-size: 1rem;
+            color: #01b87f;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" style="display: none;">
+        <div v-if="isEmpty">
+            <van-empty description="分享已失效" />
+        </div>
+
+        <div v-else class="app">
+            <div class="info-wrap">
+                <div class="video">
+                    <img v-if="alarm.vedioNames.length==0 && alarm.imgNames.length==0" style="width: 100%;height:100%"
+                        src="../../images/empty.svg" />
+                    <van-swipe v-else style="height:12rem" indicator-color="white">
+                        <van-swipe-item v-for="item in alarm.vedioNames" :key="item">
+                            <video x-webkit-airplay="allow" x5-playsinline="" webkit-playsinline="" playsinline="true"
+                                :src="alarm.fileUrlPrefix+item" controls="controls">
+                            </video>
+                        </van-swipe-item>
+                        <van-swipe-item v-for="item in alarm.imgNames" :key="item">
+                            <img style="width:100%;height:100%;" :src="alarm.fileUrlPrefix+item" />
+                        </van-swipe-item>
+                    </van-swipe>
+                </div>
+                <div class="adas-info">
+                    <div class="info-title">
+                        <h4>{{alarm.alarmInfo}}（{{alarm.alarmLevelInfo}}）</h4>
+                        <!-- <span></span> -->
+                    </div>
+                    <div class="info-list">
+                        <span>车牌号码：</span>
+                        <span>{{alarm.vehicleName}}</span>
+                    </div>
+                    <div class="info-list">
+                        <span>设备编码：</span>
+                        <span>{{alarm.terminalCode}}</span>
+                    </div>
+                    <div class="info-list">
+                        <span>所属客户：</span>
+                        <span>{{alarm.clientName}}</span>
+                    </div>
+                    <div class="info-list">
+                        <span>行驶速度：</span>
+                        <span>{{alarm.carSpeed}}km/h</span>
+                    </div>
+                    <div class="info-list">
+                        <span>报警时间：</span>
+                        <span>{{alarm.alarmBsDate}}</span>
+                    </div>
+                    <div class="info-list">
+                        <span>报警地址：</span>
+                        <span>{{alarm.posinfo}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="app-download">
+                <div class="download-logo">
+                    <span>
+                        <img src="./3.png" />
+                    </span>
+                    <span>易查车</span>
+                </div>
+                <a v-if="appUrl" :href="appUrl">下载app</a>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            alarm: { vedioNames: [], imgNames: [] },
+            carousel: [],
+            isEmpty: false,
+            appUrl: ""
+        },
+        mounted() {
+            try {
+                this.init();
+            } catch (error) {
+                console.error(error)
+                this.isEmpty = true;
+                document.getElementById("app").style.display = "";
+            }
+        },
+        methods: {
+            init() {
+                let query = window.location.search.substring(1).split("&");
+                let p = {}
+                for (let i = 0; i < query.length; i++) {
+                    let item = query[i].split("=")
+                    p[item[0]] = item[1];
+                }
+                if (p['id'] && p['exp'] && p['crt'] && p['sign'] && p['recvtime']) {
+                    let code = p['id'] + "" + p['crt'] + "" + p['exp'];
+                    if (md5(code) != p['sign']) {
+                        //签名错误，分享失效
+                        this.isEmpty = true;
+                        document.getElementById("app").style.display = "";
+                        return;
+                    }
+                } else {
+                    //缺少参数，分享失效
+                    this.isEmpty = true;
+                    document.getElementById("app").style.display = "";
+                    return;
+                }
+                //当前时间
+                let now = new Date().getTime();
+                //设置的失效时间(小时)
+                let exp = p['exp'] * 60 * 60 * 1000;
+                //分享创建时间
+                let crt = p['crt'] * 1;
+                if ((crt + exp) < now) {
+                    //过期，分享失效
+                    this.isEmpty = true;
+                    document.getElementById("app").style.display = "";
+                    return;
+                }
+                let userAgent = navigator.userAgent;
+                if (userAgent.indexOf('iPhone') > -1 || userAgent.indexOf('iPad') > -1) {
+                    this.appUrl = "https://apps.apple.com/cn/app/%E5%B0%B1%E6%89%BE%E8%BD%A6/id1507355584"
+                } else if (userAgent.indexOf('Android') > -1 || userAgent.indexOf('Linux') > -1) {
+                    this.appUrl = "https://a.app.qq.com/o/simple.jsp?pkgname=com.exlive.videoapp"
+                }
+                if (p.id) {
+                    this.load(p);
+                } else {
+                    this.isEmpty = true;
+                    document.getElementById("app").style.display = "";
+                }
+            },
+            load(p) {
+                let data = {
+                    alarmEvents: "",
+                    alarmLevel: 0,
+                    clientIds: "",
+                    endTime: p.recvtime + " 23:59:59",
+                    // endTime: '2021-07-22 14:39:07',
+                    preId: "",
+                    preTime: "",
+                    queryType: 0,
+                    // startTime: '2021-07-22 14:39:07',
+                    startTime: p.recvtime + " 00:00:00",
+                    userId: 0,
+                    vehicleIds: "",
+                    id: p.id
+                }
+                let that = this;
+                axios({
+                    url: '/report/adas/queryOrigAlarms',
+                    method: 'post',
+                    data: data
+                }).then(function (res) {
+                    if (res.data.code == '200') {
+                        let total = res.data.data.total;
+                        if (total == 0) {
+                            that.isEmpty = true;
+                            document.getElementById("app").style.display = "";
+                            return;
+                        }
+                        that.alarm = res.data.data.list[0];
+                        document.title = that.alarm.vehicleName + '(主动安全)'
+                        that.isEmpty = false;
+                    }
+                    document.getElementById("app").style.display = "";
+                }).catch(e => {
+                    document.getElementById("app").style.display = "";
+                })
+            }
+        }
+    })
+</script>
+
+</html>

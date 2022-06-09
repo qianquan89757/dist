@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/vue.js"></script>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <!-- 引入组件库 -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .jSignature {
+      margin: 10px auto;
+      padding: 0px;
+      border: 1px dashed #aaa;
+      width: calc(100vw - 60px);
+      height: calc(100vh - 200px);
+      max-height: 426px;
+      max-width: 900px;
+      touch-action: none;
+      background-color: rgb(246, 246, 246);
+      display: block;
+      outline: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <el-button type="danger" @click.native.prevent="open"
+    >打开签名</el-button
+  >
+    <canvas ref="canvas" class="jSignature" tabindex="0" @touchstart="mStart" @touchmove="mMove"
+      @touchend="mEnd"></canvas>
+    <!-- <el-dialog
+              title="签字"
+              width="100%"
+              :visible.sync="dialogVisible"
+            >
+              <span slot="footer" class="dialog-footer">
+                <el-button type="danger" @click.native.prevent="clearPanel"
+                  >清空签名</el-button
+                >
+                <el-button type="primary" @click="confirm">确认签名</el-button>
+                <el-button @click="dialogVisible = false">取消</el-button>
+              </span>
+              <canvas
+                ref="canvas"
+                class="jSignature"
+                tabindex="0"
+                @touchstart="mStart"
+                @touchmove="mMove"
+                @touchend="mEnd"
+              ></canvas>
+            </el-dialog> -->
+  </div>
+
+  <script>
+    var app = new Vue({
+      el: "#app",
+      data() {
+        return {
+          dialogVisible: false,
+          point: {
+            x: 0,
+            y: 0
+          },
+          moving: false // 是否正在绘制中且移动
+        };
+      },
+      methods: {
+        //打开签名面板
+        open() {
+          this.dialogVisible = true;
+          this.initPanel();
+        },
+        //初始化
+        initPanel() {
+          this.$nextTick(() => {
+            const c = this.$refs.canvas;
+            this.stage_info = c.getBoundingClientRect()
+            c.width = this.stage_info.width;
+            c.height = this.stage_info.height;
+            const ctx = c.getContext("2d");
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            if (this.value) {
+              const image = new Image();
+              image.src = this.image_src;
+              image.onload = function () {
+                ctx.drawImage(image, 0, 0);
+              };
+            }
+            c.focus();
+          });
+        },
+        // 清空签名
+        clearPanel(e) {
+          this.$nextTick(() => {
+            const el = this.$refs["canvas"];
+            const ctx = el.getContext("2d");
+            ctx.clearRect(0, 0, el.width, el.height);
+          });
+        },
+        // 确认签名
+        confirm() {
+          this.$nextTick(() => {
+            try {
+              const canvas = this.$refs["canvas"];
+              const blank = document.createElement("canvas"); // 创建一个空canvas对象
+              blank.width = canvas.width;
+              blank.height = canvas.height;
+              if (canvas.toDataURL() === blank.toDataURL()) {
+                this.$message.error("签字格式不正确");
+              } else {
+                //执行所需操作
+              }
+            } catch (e) {
+              console.warn(e);
+            }
+          });
+        },
+        // 触摸(开始)
+        mStart(e) {
+          const el = e.target || e.srcElement;
+          this.ctx = el.getContext("2d");
+          console.log(e);
+          let x = e.touches[0].clientX - e.target.offsetLeft * 2,
+            y = e.touches[0].clientY - e.target.offsetTop * 2; // 获取触摸点在画板（canvas）的坐标
+          console.log(x, y);
+          this.point.x = x;
+          this.point.y = y;
+          this.ctx.beginPath();
+          this.moving = true;
+        },
+        // 滑动中...
+        mMove(e) {
+          if (this.moving) {
+            let x = e.touches[0].clientX - e.target.offsetLeft * 2,
+              y = e.touches[0].clientY - e.target.offsetTop * 2; // 获取触摸点在画板（canvas）的坐标，可能不太精准，需要调整
+            this.ctx.moveTo(this.point.x, this.point.y); // 把路径移动到画布中的指定点，不创建线条(起始点)
+            this.ctx.lineTo(x, y); // 添加一个新点，然后创建从该点到画布中最后指定点的线条，不创建线条
+            this.ctx.stroke(); // 绘制
+            (this.point.x = x), (this.point.y = y); // 重置点坐标为上一个坐标
+          }
+        },
+        // 滑动结束
+        mEnd() {
+          if (this.moving) {
+            this.ctx.closePath(); // 停止绘制
+            this.moving = false; // 关闭绘制开关
+          }
+        }
+      },
+    });
+  </script>
+</body>
+
+</html>

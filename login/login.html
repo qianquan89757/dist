@@ -1,0 +1,890 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXLIVE车联网综合服务平台</title>
+    <link rel="icon" href="/login/favicon.ico">
+    <link rel="stylesheet" href="/login/lib/theme-chalk.css?v=V3.1.007">
+    <link href="/login/lib/css/font-awesome.min.css?v=V3.1.007" rel="stylesheet">
+    <link href="/login/lib/slidercaptcha.min.css?v=V3.1.007" rel="stylesheet">
+    <script src="/login/lib/longbow.slidercaptcha.min.js?v=V3.1.007"></script>
+    <script src="/login/lib/axios.min.js?v=V3.1.007"></script>
+    <script src="/login/lib/vue.js?v=V3.1.007"></script>
+    <script src="/login/lib/jquery.min.js?v=V3.1.007"></script>
+    <script src="/login/lib/element-ui.js?v=V3.1.007"></script>
+    <script src="/login/js/js.cookie.min.js?v=V3.1.007"></script>
+    <script src="/login/js/cookies.js?v=V3.1.007"></script>
+    <script src="/login/js/crypto-js.min.js?v=V3.1.007"></script>
+    <script src="/login/js/md5.js"></script>
+    <link rel="stylesheet" href="/login/css/style.css?v=V3.1.007">
+
+    <!-- <link rel="icon" href="/login/favicon.ico">
+    <link rel="stylesheet" href="/login/lib/theme-chalk.css">
+    <link href="/login/lib/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/login/lib/slidercaptcha.min.css" rel="stylesheet">
+    <script src="/login/lib/longbow.slidercaptcha.min.js"></script>
+    <script src="/login/lib/axios.min.js"></script>
+    <script src="/login/lib/vue.js"></script>
+    <script src="/login/lib/jquery.min.js"></script>
+    <script src="/login/lib/element-ui.js"></script>
+    <script src="/login/js/js.cookie.min.js"></script>
+    <script src="/login/js/cookies.js"></script>
+    <script src="/login/js/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="/login/css/style.css"> -->
+</head>
+</head>
+
+<body>
+    <div id="ie" style="display:none;position: fixed;width: 400px;left: 50%;z-index: 1000;background: #409EFF;border: 1px solid #ebebeb;padding:20px 10px;border-radius: 2px;box-shadow: 0px 0px 10px rgba(0,0,0,0.2);margin-left:-200px;margin-top: 10px;">
+        <p style="font-size: 16px;font-weight:bold;letter-spacing:2px;text-align: center;color:#fff">建议使用<a href="https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D564-463C-AFF1-A69D9E530F96%7D%26iid%3D%7B37286473-AAE8-2AD3-55F1-134B59114541%7D%26lang%3Dzh-CN%26browser%3D4%26usagestats%3D1%26appname%3DGoogle%2520Chrome%26needsadmin%3Dprefers%26ap%3Dx64-stable-statsdef_1%26installdataindex%3Dempty/update2/installers/ChromeSetup.exe"
+                target="_blank" style="color:#fff;">谷歌浏览器</a>！</p>
+    </div>
+    <div class="login" id="apps" v-cloak  :style="{'backgroundImage': `url(${loginbg})`}">
+        <div v-if="!visible" class="form-init">
+            <span style="letter-spacing: 1px;font-size:30px;color: #fff;display: block;text-align: center;margin-bottom:20px;">服务器安装</span>
+            <div class="init-wrap">
+                <div v-if="nextStep===1">
+                    <el-form label-width="120px" :model="installPhone" :rules="installPhoneRules" ref="installPhoneRef">
+                        <el-form-item label="手机号码" prop="phone">
+                            <el-input v-model="installPhone.phone"></el-input>
+                        </el-form-item>
+                        <el-form-item label="验证码" prop="code">
+                        <el-input v-model="installPhone.code" style="width: 259px;"></el-input>
+                        <el-button type="primary" plain size="medium" @click="installGetcode">{{intallcode}}</el-button>
+                        </el-form-item>
+                        <div style="padding-left:120px;"><el-button style="width: 100%;" type="primary" size="medium" @click="checkInstall">验证</el-button></div>
+                    </el-form>  
+                </div>
+                <div v-if="nextStep===2">
+                    <el-form label-width="124px" :model="installform" :rules="installformRules" ref="installformRef">
+                        <el-form-item label="手机号码">
+                            <el-input v-model="installform.phone" disabled></el-input>
+                        </el-form-item>
+                        <el-form-item label="公司名称" prop="company">
+                            <div v-if="newServerInput">
+                                <el-select value-key="id" style="width: 259px" v-model="installform.company" placeholder="请选择">
+                                    <el-option
+                                      v-for="item in installData"
+                                      :key="item.id"
+                                      :label="item.company"
+                                      :value="item">
+                                    </el-option>
+                                </el-select>
+                                <el-button type="primary" size="medium" @click="handlwNewServer">新建服务器</el-button>
+                            </div>
+                            <div v-else>
+                                <el-input v-model="installform.company" :style="{width:installData.length>0?'259px':''}"></el-input>
+                                <el-button v-if="installData.length>0" type="primary" size="medium" @click="handlwNewServer">已有服务器</el-button> 
+                            </div>
+                        </el-form-item>
+                        <el-form-item label="服务器IP/域名" prop="ip">
+                            <el-select v-if="newServerInput" style="width: 375px;"  v-model="installform.ip" placeholder="请选择">
+                                <el-option
+                                    v-for="item in installData"
+                                    :key="item.id"
+                                    :label="item.ip"
+                                    :value="item.ip">
+                                </el-option>
+                            </el-select>
+                            <el-input v-else v-model="installform.ip"></el-input>
+                        </el-form-item>
+                        <el-form-item prop="username" label="设置系统管理员">
+                            <el-input v-model="installform.username"></el-input>
+                        </el-form-item>
+                        <el-form-item prop="password" label="设置密码">
+                            <el-input type="password" v-model="installform.password"></el-input>
+                        </el-form-item>
+                        <el-form-item prop="repassword" label="确认密码">
+                            <el-input type="password" v-model="installform.repassword"></el-input>
+                        </el-form-item>
+                        <div style="padding-left:120px;"><el-button :disabled="initdisabled" style="width: 100%;" type="primary" size="medium" @click="submitInstall" :loading="initLoading">初始化</el-button></div>
+                        <div style="padding-left: 120px;"><p style="text-align: center;color: #858585;">必须打开端口TCP：8083、11111、9910</p></div>
+                    </el-form> 
+                </div> 
+            </div>
+        </div>
+        <div v-if="visible">
+            <div v-if="!maintain">
+                <div class="login-language">
+                    <a href="http://v3.exlive.cn/">中文</a>
+                    <span>|</span>
+                    <a href="http://v3.exlive.cn:8084/">English</a>
+                </div>
+                <!-- 登陆表单 -->
+                <div class="login-form">
+                    <div class="login-logo">
+                        <img src="/login/images/logo.png" />
+                        <span style="letter-spacing: 1px">EXLIVE车联网综合服务平台</span>
+                        <span style="font-size: 16px; letter-spacing: 1px">（{{vnum }}）</span>
+                        <!-- <span class="version-font">（v3.0.062）</span> -->
+                    </div>
+                    <div class="login-sign-label"></div>
+                    <div class="login-form-input">
+                        <div class="login-form-login">
+                            <el-form>
+                                <el-tabs v-model="activeName" :disabled="verizonDisabled" class="login_table" @tab-click="handleClick">
+                                    <el-tab-pane label="用户登录" name="first" class="enterprise">
+                                        <el-form-item>
+                                            <el-input prefix-icon="el-icon-user" placeholder="请输入账号" autocomplete="off" type="text" id="username" v-model="loginForm.username" :disabled="verizonDisabled" @keyup.enter.native="handleLogin" @change="userHandleChange"></el-input>
+                                        </el-form-item>
+                                        <el-form-item>
+                                            <el-input prefix-icon="el-icon-lock" placeholder="请输入密码" type="password" :disabled="verizonDisabled" v-model="loginForm.password" @keyup.enter.native="handleLogin"></el-input>
+                                        </el-form-item>
+                                    </el-tab-pane>
+                                    <el-tab-pane :disabled="verizonDisabled" label="车牌/IMEI号" name="second" class="personage ">
+                                        <el-form-item>
+                                            <el-input prefix-icon="el-icon-user" placeholder="请输入账号" autocomplete="off" type="text" id="username" v-model="loginForm.username" @keyup.enter.native="handleLogin"></el-input>
+                                        </el-form-item>
+                                        <el-form-item>
+                                            <el-input prefix-icon="el-icon-lock" placeholder="请输入密码" type="password" v-model="loginForm.password" @keyup.enter.native="handleLogin"></el-input>
+                                        </el-form-item>
+                                    </el-tab-pane>
+                                </el-tabs>
+
+                                <div class="item-row login-btn" @click="handleLogin">
+                                    <el-button type="primary">登&nbsp;&nbsp;录</el-button>
+                                </div>
+                                <div class="item-row">
+                                    <el-checkbox v-model="remember">记住密码</el-checkbox>
+                                    <span v-if="noPassClick" class="jizhumima" disabled="true">忘记密码?</span>
+                                    <span v-else class="jizhumima" @click="handleForgetClick">忘记密码?</span>
+                                </div>
+                            </el-form>
+                        </div>
+                    </div>
+                    <!-- 二维码 -->
+                    <div class="code-position">
+                        <div class="code-list" style="width:114px;">
+                            <div style="margin: 0px;">
+                                <img src="/login/images/ewm/codeI.png" />
+                            </div>
+                            <div>易查车（iOS）</div>
+                        </div>
+                        <div class="code-list" style="width:114px;">
+                            <div style="margin: 0px;">
+                                <img src="/login/images/ewm/codeA.png" />
+                            </div>
+                            <div style="margin-bottom: 5px">易查车（Android）</div>
+                        </div>
+                        <div class="code-list" style="width:114px;">
+                            <div style="margin: 0px;">
+                                <img src="/login/images/ewm/mini.jpg" />
+                            </div>
+                            <div style="margin-bottom: 5px">易查车（小程序）</div>
+                        </div>
+                        
+                    </div>
+                    <!-- 二维码 end-->
+                </div>
+                <!-- 登陆表单 end-->
+                <!-- 验证码 -->
+                <div class="slidercaptcha card" v-if="verify">
+                    <div class="card-header">
+                        <span>请完成安全验证!</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="captcha"></div>
+                    </div>
+                </div>
+                <!-- 验证码 end-->
+            </div>
+            <div v-if="maintain" class="maintain">
+                <div v-if="logintip">
+                    <div class="icon-maintain"><i></i></div>
+                    <p>系统维护中，请稍后再试...</p>
+                </div>
+                <div v-else>
+                    <div class="icon-maintain"><i></i></div>
+                    <p>服务启动中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const VERIFYCODE = 0 //配置验证码
+    let timer=null
+    let reflag=false;
+    let installTimer=null
+    let times=60
+    let submit=true
+    new Vue({
+        name: 'login',
+        el: '#apps',
+        data() {
+            const checkPhone=(rule, value, callback)=> {
+                if (!value) {
+                    return callback(new Error("请输入手机号！"));
+                }
+                const reg = /^1[3|4|5|6|7|8|9][0-9]\d{8}$/;
+                if(reg.test(value)){
+                    callback()
+                }else{
+                    callback(new Error("手机号不正确！"));
+                }
+            }
+            const validatePass2 = (rule, value, callback) => {
+                if (value === "") {
+                    callback(new Error("请再次输入密码！"));
+                } else if (value !== this.regForm.password) {
+                    callback(new Error("两次输入密码不一致！"));
+                } else {
+                    callback();
+                }
+            };
+            const rePass = (rule, value, callback) => {
+                if (value === "") {
+                    callback(new Error("确认密码不能为空！"));
+                } else if (value !== this.installform.password) {
+                    callback(new Error("两次输入密码不一致！"));
+                } else {
+                    callback();
+                }
+            };
+            const checkip=(rule, value, callback) => {
+                const ip= /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
+                const w=/^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$/ 
+                if (value === "") {
+                    callback(new Error("服务器IP/域名不能为空！"));
+                    return
+                }
+                if(w.test(value) || ip.test(value)){
+                    return callback();
+                }
+                callback(new Error('服务器IP/域名不正确！'))
+            };
+            return {
+                activeName: 'first',
+                verizonDisabled: false,
+                noPassClick: false,
+                verify: false,
+                loginbg:'login/images/login/login-bg.jpg',
+                vnum: '',
+                maintain:false,
+                logintip:true,
+                visible:true,
+                nextStep:1,
+                newServerInput:false,
+                intallcode:'获取验证码',
+                initLoading:false,
+                installPhone:{
+                    phone:'',
+                    code:''
+                },
+                installPhoneRules:{
+                    phone:[
+                      { required: true, validator:checkPhone, trigger: 'blur' },
+                    ]
+                },
+                installform:{
+                    ip:'',
+                    phone:'',
+                    company:'',
+                    username:'',
+                    password:'',
+                    repassword:''
+                },
+                installformRules:{
+                    company:[
+                      { required: true, message: "公司名称不能为空", trigger: 'blur' },
+                    ],
+                    ip:[
+                      { required: true, validator:checkip, trigger: 'blur' },
+                    ],
+                    username:[
+                      { required: true, message: "系统管理员不能为空", trigger: 'blur' },
+                    ],
+                    password:[
+                      { required: true, message: "密码不能为空", trigger: 'blur' },
+                    ],
+                    repassword:[
+                     { required: true, validator:rePass, trigger: 'blur' },  
+                    ]
+                },
+                installData:[],
+                loginForm: {
+                    type: "0",
+                    username: "",
+                    password: "",
+                },
+                regForm: {
+                    username: "",
+                    password: "",
+                    password2: "",
+                    phone: "",
+                    code: "", //验证码
+                    company: "",
+                    tjcode: "",
+                    agree: false,
+                },
+                regCode: {
+                    id: -1,
+                    sended: false,
+                    timer: 75,
+                },
+                regRules: {
+                    phone: [{
+                        required: true,
+                        message: "手机号码不能为空",
+                        trigger: "blur"
+                    }, {
+                        pattern: /^1[34578]\d{9}$/,
+                        message: "目前只支持中国大陆的手机号码",
+                    },],
+                    code: [{
+                        required: true,
+                        message: "验证码不能为空",
+                        trigger: "blur"
+                    }, {
+                        pattern: /^\d{4}$/,
+                        message: "验证码必须是4位数字"
+                    }, ],
+                    username: [{
+                        required: true,
+                        message: " 账号不能为空",
+                        trigger: "blur"
+                    }, {
+                        pattern: /^[a-zA-z]\w{3,15}$/,
+                        message: "账号必须是字母、数字、下划线组成，字母开头，4-16位",
+                    }, ],
+                    password: [{
+                        required: true,
+                        message: "密码不能为空 ",
+                        trigger: "blur"
+                    }, {
+                        pattern: /^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,20}$/,
+                        message: "密码至少包含 数字和英文，长度6-20",
+                    }, ],
+                    password2: [{
+                        validator: validatePass2,
+                        trigger: "blur"
+                    }],
+
+                    company: [{
+                        required: true,
+                        message: "企业名称不能为空 ",
+                        trigger: "blur"
+                    }, {
+                        min: 2,
+                        max: 18,
+                        message: "长度在 2 到 18 个字符",
+                        trigger: "blur",
+                    }, ],
+                },
+                registerShow: false,
+                loading: null,
+                loginShow: true,
+                remember: false,
+                rememberInfo: {},
+                aesKey: Math.ceil(Math.random() * 100000000) + 100000000,
+                aesIv: Math.ceil(Math.random() * 100000000) + 100000000,
+            }
+        },
+        mounted() {
+            this.getLoginBg()
+            if (this.getQueryVariable('username') && this.getQueryVariable('password')) {
+                var username = this.getQueryVariable('username')
+                var password = this.getQueryVariable('password')
+                this.loginForm = {
+                        type: "0",
+                        username: username,
+                        password: password,
+                    },
+                    this.verizonDisabled = true
+            }
+            removeCookieValue("tmp.remember");
+            this.getServerState()//获取服务器状态
+            let userRemember = getCookieValue("tmp.remember.v3");
+            if (userRemember) {
+                let key = '11838114';
+                let iv = '13970321';
+                userRemember = this.getDAesString(userRemember, key, iv);
+                let userArray = userRemember.split("#,,#");
+                let type = userArray[0];
+                let u0 = userArray[1].split("#,#")[0];
+                let p0 = window.atob(userArray[1].split("#,#")[1]);
+                let u1 = userArray[2].split("#,#")[0];
+                let p1 = window.atob(userArray[2].split("#,#")[1]);
+                this.rememberInfo = {
+                    u0,
+                    p0,
+                    u1,
+                    p1
+                }
+                if (type) {
+                    this.$set(this.loginForm, "type", type);
+                    if (type == 1) {
+                        this.activeName = "second"
+                        if (u1) {
+                            this.$set(this.loginForm, "username", u1);
+                        }
+                        if (p1) {
+                            this.$set(this.loginForm, "password", p1);
+                        }
+                    } else {
+                        this.activeName = "first"
+                        if (u0) {
+                            this.$set(this.loginForm, "username", u0);
+                        }
+                        if (p0) {
+                            this.$set(this.loginForm, "password", p0);
+                        }
+                    }
+                }
+                this.remember = true;
+            } else {
+                let that = this
+                that.handlePath();
+            }
+        },
+        activated() {
+            let that = this
+            that.handlePath();
+        },
+        methods: {
+            //获取登录背景
+            getLoginBg(){
+                axios({
+                    url: '/video/userData/login/background/public/get',
+                    method: 'post',
+                }).then(res => {
+                    if(res.data.code==='0000'){  
+                        this.loginbg=res.data.data?res.data.data:'login/images/login/login-bg.jpg'
+                    }else{
+                        this.loginbg='login/images/login/login-bg.jpg'
+                    }
+                }).catch(error => {
+                    this.loginbg='login/images/login/login-bg.jpg'
+                })
+            },
+            //服务器安装-服务器注册状态
+            getServerState(){
+                axios({
+                    url: '/video/pay/public/server/veriry',
+                    method: 'get',
+                }).then(res => {
+                    if(res.data.code==='0000'){  
+                       this.visible=res.data.data  
+                    }else{
+                       this.visible=true 
+                    }
+                    this.vnumRequest()
+                }).catch(error => {
+                    this.visible=true 
+                    this.vnumRequest()
+                })
+            },
+            //服务器安装-获取手机验证码
+            async installGetcode(){
+                this.intallcode=`${times}秒后重发`
+                if(installTimer){
+                    return
+                }
+                installTimer=setInterval(()=>{
+                    times-=1
+                    this.intallcode=`${times}秒后重发`
+                    if(times<=0){
+                        times=60
+                        this.intallcode='获取验证码'
+                        submit=true
+                        clearInterval(installTimer)
+                        installTimer=null
+                    }
+                },1000)
+                if(!submit) return
+                submit=false
+                try {
+                  await this.$refs.installPhoneRef.validate(['phone']) 
+                  axios({
+                        url: '/video/pay/public/server/code',
+                        method: 'get',
+                        params:{
+                           phone:this.installPhone.phone
+                        }
+                    }).then().catch(error => {
+                       this.$message.warning('验证码获取失败！')
+                    })
+                 } catch (error) {
+                    this.$message.warning('手机号码不正确！')
+                 }   
+            },
+            //服务器安装-手机验证码验证
+            async checkInstall(){
+                if(this.installPhone.code===''){
+                    this.$message.warning('请输入验证码！')
+                    return
+                }
+                this.$refs.installPhoneRef.validate((valid) => {
+                    if(valid){
+                        axios({
+                            url: '/video/pay/public/server/code/check',
+                            method: 'get',
+                            params:this.installPhone
+                        }).then(res=>{
+                            if(res.data.code==='0000'){
+                                if(res.data.data.length>0){
+                                 this.installData=res.data.data
+                                 this.newServerInput=true;
+                                }else{
+                                 this.newServerInput=false;
+                                }
+                                this.nextStep=2 
+                                this.installform.phone=this.installPhone.phone
+                            }else{
+                             this.$message.warning(res.data.message)
+                            }
+                        }).catch(error => {
+                            this.$message.warning('服务器异常！')
+                        })
+                    }
+                })
+            },
+            //新建服务器
+            handlwNewServer(){
+                this.newServerInput=!this.newServerInput;
+                this.installform.company='';
+                this.installform.ip='';
+                this.$refs.installformRef.clearValidate(['ip'])
+            },
+            //安装表单提交
+            submitInstall(){
+                this.initLoading=true;
+                let p=Object.assign({},this.installform)
+                if(this.newServerInput){
+                   p.company=this.installform.company.company
+                   p.id=this.installform.company.id
+                }
+                this.$refs.installformRef.validate((valid)=>{
+                  if (valid) {
+                    axios({
+                            url: '/video/pay/public/server/reg',
+                            method: 'post',
+                            data:p
+                        }).then(res=>{
+                            if(!res.data){
+                               this.initdisabled=false
+                               this.initLoading=false
+                               this.$message.error('服务器初始化失败')
+                            }
+                            if(res.data.code==='0000'){
+                               this.initdisabled=true
+                               this.initLoading=false
+                               this.$message.success('服务器初始化成功')
+                               reflag=true
+                               this.getServerState()
+                               setTimeout(()=>{
+                                this.visible=true 
+                               },1500)
+                            }
+                        }).catch(error => {
+                            this.initdisabled=false
+                            this.initLoading=false
+                            this.$message.error('服务器异常！')
+                    })
+                  }
+                })
+            },
+            //路由传参
+            handlePath() {
+                if (this.getQueryString('username') && this.getQueryVariable('password')) {
+                    var username = this.getQueryString('username')
+                    var password = this.getQueryVariable('password')
+                    this.$set(this.loginForm, "username", username);
+                    this.$set(this.loginForm, "password", password);
+                    this.verizonDisabled = true
+                }
+            },
+            //获取中文参数
+            getQueryString(name) {
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+                var r = window.location.search.substr(1).match(reg);
+                if (r != null) return decodeURI(r[2]);
+                return null;
+            },
+            //获取路由参数
+            getQueryVariable(variable) {
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                for (var i = 0; i < vars.length; i++) {
+                    var pair = vars[i].split("=");
+                    if (pair[0] == variable) {
+                        return pair[1];
+                    }
+                }
+                return (false);
+            },
+            vnumRequest() {
+                axios({
+                    url: '/video/viewingtime/public/readVersion',
+                    method: 'post'
+                }).then(res => {
+                    if (res.data.code === '0000') {
+                        if(res.data.state===0){
+                          this.maintain=true
+                          this.logintip=false
+                          if(!timer && reflag){
+                          	 timer=setInterval(()=>{
+	                            this.vnumRequest()
+	                          },20*1000)
+                           }
+                         
+                          return
+                        }
+                        timer && clearInterval(timer)
+                        this.vnum = res.data.version_num
+                        this.maintain =false
+                        this.logintip=true
+                    } else {
+                        this.vnum = ''
+                    }
+                }).catch(error => {
+                    this.vnum = ''
+                    this.maintain = true
+                    this.logintip=true
+                    console.error(error)
+                })
+            },
+            handleClick() {
+                if (this.activeName == "first") {
+                    this.loginForm.type = 0
+                    if (this.rememberInfo.u0) {
+                        this.$set(this.loginForm, "username", this.rememberInfo.u0);
+                    }
+                    if (this.rememberInfo.p0) {
+                        this.$set(this.loginForm, "password", this.rememberInfo.p0);
+                    }
+                } else if (this.activeName == "second") {
+                    this.loginForm.type = 1
+                    if (this.rememberInfo.u1) {
+                        this.$set(this.loginForm, "username", this.rememberInfo.u1);
+                    }
+                    if (this.rememberInfo.p1) {
+                        this.$set(this.loginForm, "password", this.rememberInfo.p1);
+                    }
+                }
+            },
+            //用户登录
+            handleLogin(captchaVerification) {
+                if (this.loginForm.username == "") {
+                    this.$message.warning("请输入用户名");
+                    return;
+                }
+                if (this.loginForm.password == "") {
+                    this.$message.warning("请输入密码");
+                    return;
+                }
+                if (VERIFYCODE == 1) {
+                    this.verify = true //验证码
+                    this.$nextTick(() => {
+                        this.codeVerifyFunc()
+                    })
+                } else {
+                    this.codeVerifySuccess({
+                        captchaVerification: 0
+                    });
+                }
+            },
+            codeVerifySuccess(params) {
+                this.goLogin(
+                    this.loginForm.username,
+                    this.loginForm.password,
+                    this.loginForm.type,
+                    params.captchaVerification
+                );
+            },
+            codeVerifyFunc() { //创建验证码实例
+                var captcha = sliderCaptcha({
+                    id: 'captcha',
+                    repeatIcon: 'fa fa-redo',
+                    width: 330,
+                    height: 150,
+                    setSrc: function() {
+                        return 'http://imgs.blazor.zone/images/Pic' + Math.round(Math.random() * 136) + '.jpg';
+                    },
+                    onSuccess: function() { //成功事件
+                        var handler = setTimeout(function() {
+                            window.clearTimeout(handler);
+                            // this.codeVerifySuccess() //执行登录方法
+                            captcha.reset();
+                        }, 500);
+                    },
+                    onFail: function() { //失败事件
+
+                    },
+                    // verify: function(arr, url) {
+                    //     console.log(arr)
+                    // }
+                })
+            },
+            //请求权限
+            getAuth(token){
+               return axios({
+                    url: '/video/user/selectAuthByLogin',
+                    method: 'post',
+                    headers:{
+                        'Authorization':token
+                    }
+                })
+            },
+            //登录跳转
+            goLogin(username, password, type, captchaVerification) {
+                let pass = md5(password)
+                axios({
+                    url: '/video/user/login?' + new Date().getTime(),
+                    method: 'post',
+                    params: {
+                        username,
+                        password: pass,
+                        type
+                    }
+                }).then(async res => {
+                    if (res.data.code == '0000') {
+                        if (this.remember) {
+                            let u0 = "";
+                            let p0 = "";
+                            let u1 = "";
+                            let p1 = "";
+                            let userRemember = getCookieValue("tmp.remember.v3");
+                            if (userRemember) {
+                                let key = '11838114';
+                                let iv = '13970321';
+                                userRemember = this.getDAesString(userRemember, key, iv);
+                                let userArray = userRemember.split("#,,#");
+                                u0 = userArray[1].split("#,#")[0];
+                                p0 = userArray[1].split("#,#")[1];
+                                u1 = userArray[2].split("#,#")[0];
+                                p1 = userArray[2].split("#,#")[1];
+                            }
+                            if (type == 0) {
+                                u0 = username;
+                                p0 = window.btoa(password)
+                            } else if (type == 1) {
+                                u1 = username;
+                                p1 = window.btoa(password)
+                            }
+                            let tmp = type + "#,,#" + u0 + "#,#" + p0 + "#,,#" + u1 + "#,#" + p1;
+                            var key = '11838114';
+                            var iv = '13970321';
+                            var encrypted = this.getAesString(tmp, key, iv);
+                            setCookieValue(
+                                "tmp.remember.v3",
+                                encrypted
+                            );
+                        } else {
+                            removeCookieValue("tmp.remember.v3");
+                        }
+                        let uStr=res.data.data.imageUrl
+                        if(window.location.protocol.indexOf('https:')>-1){
+						 uStr=res.data.data.imageUrl.replace(/http/, "https")
+						}
+
+                        localStorage.setItem('user',res.data.data.loginName)
+                        setCookieValue('tokenKey', res.data.data.token)
+                        setCookieValue('user.pass', password)
+                        setCookieValue('user.name', res.data.data.loginName)
+                        setCookieValue('user.id', res.data.data.id)
+                        setCookieValue('user.clientId', res.data.data.clientId)
+                        setCookieValue('user.imageUrl', uStr)
+                        setCookieValue('user.clientName', res.data.data.clientName)
+                        setCookieValue('user.loginType', res.data.data.loginType)
+                        setCookieValue('user.serverid', res.data.data.serverid)
+                        setCookieValue('user.logintime', res.data.data.loginTime)
+                        setCookieValue('user.loginName', res.data.data.loginName)
+                        setCookieValue('user.type', res.data.data.type)
+                        setCookieValue('dialog.acc', true)
+                        setCookieValue('dialog.adas', true)
+                        setCookieValue('user.loginForm', "/")
+                        setCookieValue('user.roleId', res.data.data.roleId)
+                        let a=await this.getAuth(res.data.data.token)
+                        let flag=a.data.data.find(({auth_id}) => auth_id ===640)
+                        if (res.data.data.clientId == 0) {
+                            //未选择部署类型
+                            window.location.href = "/selectFwq"
+                        } else {
+                            if (getCookieValue('to')) {
+                                if (type == "0") {
+                                    window.location.href = getCookieValue('to')
+                                    removeCookieValue('to')
+                                } else if (type == "1") {
+                                    window.location.href = "/shishijiankong"
+                                    removeCookieValue('to')
+                                }
+                            } else {
+                                if (type == "0") {
+                                    if(flag){
+                                        window.location.href = "/homeNormal"
+                                        return
+                                    }
+                                    window.location.href = "/shishijiankong"
+                                } else if (type == "1") {
+                                    window.location.href = "/shishijiankong"
+                                }
+                            }
+                        }
+                    } else {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            //校验体验账号
+            userHandleChange(val) {
+                if (val == '体验账号') {
+                    this.noPassClick = true
+                } else {
+                    this.noPassClick = false
+                }
+            },
+            //忘记密码
+            handleForgetClick() {
+                if (this.loginForm.username == '体验账号') {
+                    this.noPassClick = true
+                } else {
+                    window.location.href = "/forgetPassword"
+                }
+            },
+            getAesString(data, key, iv) {
+                var key = CryptoJS.enc.Utf8.parse(key);
+                var iv = CryptoJS.enc.Utf8.parse(iv);
+                var encrypted = CryptoJS.AES.encrypt(data, key, {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+                return encrypted.ciphertext.toString().toUpperCase();
+            },
+            getDAesString(encrypted, key, iv) {
+                encrypted = CryptoJS.enc.Hex.parse(encrypted);
+                encrypted = CryptoJS.enc.Base64.stringify(encrypted);
+                var key = CryptoJS.enc.Utf8.parse(key);
+                var iv = CryptoJS.enc.Utf8.parse(iv);
+                var decrypted = CryptoJS.AES.decrypt(encrypted, key, {
+                    iv: iv,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+                return decrypted.toString(CryptoJS.enc.Utf8);
+            }
+        }
+    })
+</script>
+<script>
+    function isIE() { //ie?
+        if (!!window.ActiveXObject || "ActiveXObject" in window)
+            return true;
+        else
+            return false;
+    }
+
+    function ieJudge() {
+        if (isIE() === true) {
+            document.querySelector('#ie').style.display = 'block'
+            document.querySelector('#apps').innerHTML = ''
+            return
+        }
+    }
+    ieJudge()
+</script>
+
+</html>

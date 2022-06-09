@@ -1,0 +1,127 @@
+<!--
+ * @Author: Mr.cao
+ * @Date: 2020-12-25 10:58:43
+ * @LastEditTime: 2020-12-25 12:06:31
+ * @LastEditors: Mr.cao
+ * @Description: 
+ * @FilePath: \carPlace\autoNavi.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/vue.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script src="./js/vue-router.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    html, body, .car_container{
+        height: 100%;
+        width: 100%;
+    }
+    #container{
+      width: 100%;
+      height: 92.8%;
+    }
+    .BMap_cpyCtrl {
+      display: none;
+    }
+    .anchorBL{
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="car_container" style="background-color:#F7F7F7;" v-cloak>
+    <van-nav-bar class="nav_bar" title="位置" left-arrow @click-left="onClickLeft" style="background: #2FBD51;">
+    </van-nav-bar>
+    <div id="container" class="floating"> </div>
+  </div>
+  <script type="text/javascript" src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=YVXeNpRyEhlayK1ufa7U79vwKhAmetUo"></script>
+  <script type="text/javascript">
+    let app =new Vue({
+      el: '#app',
+      data: {
+      },
+      computed: {},
+      methods: {
+        //高德经纬度转换百度
+        tobdMap(x, y) {
+          var x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+            var z = Math.sqrt(x * x + y * y) + 0.00002 * Math.sin(y * x_pi);
+            var theta = Math.atan2(y, x) + 0.000003 * Math.cos(x * x_pi);
+          var bd_lon = z * Math.cos(theta) + 0.0065;
+            var bd_lat = z * Math.sin(theta) + 0.006;
+          var pt =new BMapGL.Point(bd_lon, bd_lat);
+          return pt;
+        },
+        //地图
+        webMap(){
+          var locDate = this.getQueryVariable('location')
+          var pinot = locDate.split(',')
+          var toPiont = this.tobdMap(Number(pinot[0]), Number(pinot[1]))
+        console.log(toPiont);
+          var map = new BMapGL.Map("container");
+          var new_point = new BMapGL.Point(toPiont.lng,toPiont.lat);
+          map.centerAndZoom(new_point,15);
+          var marker = new BMapGL.Marker(new_point);  // 创建标注
+          map.addOverlay(marker);              // 将标注添加到地图中
+          map.panTo(new_point);// 用经纬度设置地图中心点
+          map.enableScrollWheelZoom(true);
+        },
+        //取cookie中的值
+        getCookie(name) {
+            var prefix = name + "="
+            var start = document.cookie.indexOf(prefix)
+        
+            if (start == -1) {
+                return null;
+            }
+        
+            var end = document.cookie.indexOf(";", start + prefix.length)
+            if (end == -1) {
+                end = document.cookie.length;
+            }
+        
+            var value = document.cookie.substring(start + prefix.length, end)
+            return unescape(value);
+        },
+        //获取路由参数
+        getQueryVariable(variable){
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i=0;i<vars.length;i++) {
+                  var pair = vars[i].split("=");
+                  if(pair[0] == variable){return pair[1];}
+          }
+          return(false);
+        },
+        // 返回
+        onClickLeft() {
+          console.log('返回');
+          window.history.go(-1)
+        },
+      },
+      created(){
+      },  
+      beforeMount() {
+        console.log("挂载前生命周期");
+      },
+      mounted() {
+        console.log("挂载完成生命周期");
+        console.log(window.location.search.substring(1));
+           this.webMap()
+      },
+      watch: {
+        'message'() {
+          console.log("监视器调用");
+        }
+      }
+    })
+  </script> 
+</body>
+</html>

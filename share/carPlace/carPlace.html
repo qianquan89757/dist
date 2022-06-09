@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>车辆位置</title>
+  <script src="./js/vue.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script src="./js/vue-router.js"></script>
+  <script src="./js/echarts.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.10/lib/index.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vant@2.10/lib/vant.min.js"></script>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+  <div id="app" class="car_container" style="background-color:#F7F7F7;" v-cloak>
+    <van-nav-bar class="nav_bar" :title="title" left-arrow @click-left="onClickLeft" style="background: #2FBD51;">
+    </van-nav-bar>
+    <van-row>
+      <van-col span="24" style="padding: 15px 20px;">
+        <div class="car_address floating">
+          <div class="car_title">
+            <div class="car_cent floating">
+              <div class="car_adres_text">{{userInfoData.clientName}}</div>
+              <!-- <div class="car_adres_img">{{userInfoData.julie}}m</div> -->
+            </div>
+            <div class="car_coment" v-if="userInfoData.clientRemark!==''">{{userInfoData.clientRemark}}</div>
+          </div>
+          <div class="car_text floating">
+            <div class="car_tel">
+              <img src="./images/tel.png" alt="" srcset="">
+              400-5236647</div>
+            <div class="car_lu" @click="gotoSite">
+              <img src="./images/jy-ico2.png" alt="" srcset="">
+              去这里</div>
+          </div>
+        </div>
+        <div style="margin-top: 20px;">
+          <van-pull-refresh v-model="isLoading" @refresh="onRefresh">
+            <van-list
+              v-model="loading" :error.sync="error" error-text="请求失败，点击重新加载" :finished="finished"
+              finished-text="已经到底了~~" @load="onLoad"
+            >
+            <van-cell class="cell_conment" v-for="(item,index) in list" :key="index" style="border-radius: 15px;margin-bottom: 10px;">
+              <template #title>
+                <van-row class="car_rescue_coment floating">
+                  <van-col :span="8">
+                    <img :src="item.photos.length==0?defaultImg:item.photos[0].url" alt="">
+                  </van-col>
+                  <van-col :span="16" class="car_res_text">
+                    <div class="car_first_child">{{item.name}}</div>
+                    <div class="van-ellipsis" v-if="item.address.length!==0">{{item.cityname}}{{item.adname}}{{item.address}}</div>
+                    <div>距离：<span class="spn_color">{{item.distance/1000}}km</span></div>
+                  </van-col>
+                  <!-- <img :src="item.photos.length==0?defaultImg:item.photos[0].url" alt="">
+                  <div class="car_res_text">
+                    <div class="car_first_child">{{item.name}}</div>
+                    <div class="van-ellipsis" v-if="item.address.length!==0">{{item.cityname}}{{item.adname}}{{item.address}}</div>
+                    <div>距离：<span class="spn_color">{{item.distance/1000}}km</span></div>
+                  </div> -->
+                </van-row>
+                <van-row class="list_img">
+                  <van-col :span="6" style="text-align: center;" @click="vistaAmp(item.location)">
+                    <img src="./images/jy-ico1.png" alt="">
+                    街景
+                  </van-col>
+                  <van-col :span="6" style="text-align: center;" @click="gotoSite(item.location)">
+                    <img src="./images/jy-ico2.png" alt="">
+                    去这里
+                  </van-col>
+                  <van-col :span="6" style="text-align: center;" @click="mapPlace(item.location)">
+                    <img src="./images/jy-ico3.png" alt="">
+                    位置
+                  </van-col>
+                  <van-col :span="6" style="text-align: center;">
+                    <img src="./images/jy-ico4.png" alt="">
+                    详情
+                  </van-col>
+                </van-row>
+              </template>
+            </van-cell>
+            </van-list>
+          </van-pull-refresh>  
+        </div>
+      </van-col>
+    </van-row>
+  </div>
+<script type="text/javascript">
+  let app =new Vue({
+    el: '#app',
+    data: {
+      cookieToken:'',
+      locationPinot:'',
+      userInfoData:{},
+      list:[],
+      title:'救援',
+      defaultImg:'./images/defaultImg.png',
+      loading: false,
+      error: false,
+      finished: false,
+      isLoading:false,
+      listPage:{
+        pageNum:0,
+        pageSize:10,
+        total:0
+      }
+    },
+    computed: {},
+    methods: {
+      //取cookie中的值
+      getCookie(name) {
+          var prefix = name + "="
+          var start = document.cookie.indexOf(prefix)
+      
+          if (start == -1) {
+              return null;
+          }
+      
+          var end = document.cookie.indexOf(";", start + prefix.length)
+          if (end == -1) {
+              end = document.cookie.length;
+          }
+      
+          var value = document.cookie.substring(start + prefix.length, end)
+          return unescape(value);
+      },
+      //用户信息
+      userInfo(){
+        let that = this
+        // that.cookieToken
+        // that.getCookie("token")
+        axios({
+              url: '/video/client/info',
+              method: 'post',
+              headers: { 'Authorization': that.cookieToken },
+          }).then(res=> {
+            if (res.data.code == '0000') {
+              that.userInfoData = res.data.data
+            }
+        }).catch(function (error) {
+          console.log(error);
+          let data= {
+              clientName:'西安市北大街4s店',
+              clientRemark:"西安市雁塔区丈八北路与科技二路交叉路口东150米",//地址
+              contactPhone:"400-5236647",
+              julie:'500'
+          }
+          
+          that.userInfoData=data
+        });
+      },
+      //初始化
+      onLoad() {
+        console.log("object");
+        let that = this
+        if (that.isLoading) {
+          that.list = [];
+          that.isLoading = false;
+        }
+        let amapVal = {}
+        that.listPage.pageNum +=1
+        let params = {
+          key:'a82816aece26858e288e775b1985b9e4',
+          location:that.locationPinot,
+          keywords:that.title,
+          pageSize: 10, // 单页显示结果条数
+          children: 0, //不展示子节点数据
+          pageIndex: that.listPage.pageNum, //页码
+          extensions: 'all' //返回基本地址信息
+        }
+        axios({
+              url: 'http://restapi.amap.com/v3/place/around',
+              method: 'get',
+              params:params
+              //headers: { 'Authorization': this.getCookie("token") },
+          }).then(res=> {
+            if (res.data.infocode == '10000') {
+              let datas = res.data.pois
+              datas.forEach(element => {
+                element.meters = Number(element.distance) / 1000
+                this.list.push(element)
+              });
+              this.loading = false;
+              this.listPage.total = Number(res.data.count) 
+              if (this.list.length == res.data.count) {
+                this.finished = true;
+              }
+            }
+        })
+      },
+      onRefresh() {
+        // 清空列表数据
+        this.finished = false;
+        // 重新加载数据
+        // 将 loading 设置为 true，表示处于加载状态
+        this.loading = true;
+        this.onLoad();
+      },
+      //获取当前时间
+      addDate () {
+        let nowDate = new Date()
+        let month = ""
+        let dateTime =""
+        if(nowDate.getMonth() + 1<10){
+          month = "0" + nowDate.getMonth() + 1
+        }else{
+          month = nowDate.getMonth() + 1
+        }
+        if(nowDate.getDate() < 10){
+          dateTime = "0" + nowDate.getDate()
+        }else{
+          dateTime = nowDate.getDate()
+        }
+        let date = {
+          year: nowDate.getFullYear(),
+          month: nowDate.getMonth() + 1,
+          date: nowDate.getDate()
+        }
+        let systemTime = date.year + '-' + date.month + '-' + date.date
+        return systemTime
+      },
+      //获取路由参数
+      getQueryVariable(variable){
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+                var pair = vars[i].split("=");
+                if(pair[0] == variable){return pair[1];}
+        }
+        return(false);
+      },
+      // 返回
+      onClickLeft() {
+        console.log('返回');
+       //
+      },
+      //街景
+      vistaAmp(value){
+        console.log(value);
+        window.location.href="./amapPlace.html?location="+value
+      },
+      //去这里
+      gotoSite(value){
+        let lacPiont = this.locationPinot
+        console.log(value);
+        window.location.href="./routeMap.html?location="+lacPiont+"&newLocation="+value
+      },
+      //位置
+      mapPlace(value){
+        console.log(value);
+        window.location.href="./autoNavi.html?location="+value
+      }
+    },
+    created(){
+    },  
+    beforeMount() {
+      console.log("挂载前生命周期");
+    },
+    mounted() {
+      console.log("挂载完成生命周期");
+      console.log(window.location.search.substring(1));
+      if(this.getQueryVariable("title")=="1"){
+        this.title="救援"
+      }else if(this.getQueryVariable("title")=="2"){
+        this.title="加油站"
+      }else if(this.getQueryVariable("title")=="3"){
+        this.title="4S店"
+      }else if(this.getQueryVariable("title")=="4"){
+        this.title="停车场"
+      }
+      this.cookieToken = this.getQueryVariable("token")
+      this.locationPinot = this.getQueryVariable("location")
+       this.userInfo()
+    },
+    watch: {
+      'message'() {
+        console.log("监视器调用");
+      }
+    }
+  })
+</script>
+</body>
+</html>

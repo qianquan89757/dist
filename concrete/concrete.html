@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商砼车详情页</title>
+  <script src="./js/vue.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script src="./js/vue-router.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css"/>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .jSignature {
+      margin: 10px auto;
+      padding: 0px;
+      border: 1px dashed #aaa;
+      width: calc(100vw - 60px);
+      height: calc(100vh - 200px);
+      max-height: 426px;
+      max-width: 900px;
+      touch-action: none;
+      background-color: rgb(246, 246, 246);
+      display: block;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="concrete_car" style="background-color:#F7F7F7;" v-cloak>
+    <div class="floating">
+      <div class="concrete_title_conment floating">
+        <div class="concrete_title_left">
+          <img src="./images/dingdan.png" alt="" style="width: 22px;vertical-align: middle;">
+          <div style="display: inline-block;line-height: 22px;">订单：{{orderData.ysdh}}</div>
+        </div>
+        <div class="concrete_title_right">
+          拌楼号：{{orderData.scbm}}
+        </div>
+      </div>
+      <div class="floating">
+        <table class="concrete_table floating" id="table" border="" cellspacing="0" >
+          <tbody>
+            <tr>
+              <td style="width: 102px;">生产时间</td>
+              <td align="left">{{orderData.ordertime}}</td>
+            </tr>
+            <tr>
+              <td style="width: 102px;">施工单位</td>
+              <td align="left">{{orderData.sgdw}}</td>
+            </tr>
+            <tr>
+              <td style="width: 102px;">工程名称</td>
+              <td align="left">{{orderData.gcmc}}</td>
+            </tr>
+            <tr>
+              <td style="width: 102px;border-bottom: none;">砼浇筑部位</td>
+              <td align="left">{{orderData.bw}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="concrete_table floating" id="tableTwo" border="1" cellspacing="0" style="border-top: none;border-collapse: collapse;">
+          <tbody>
+            <tr>
+              <td style="border-top: none;width: 102px;">砼强度等级</td>
+              <td style="border-top: none;">{{orderData.qddj}}</td>
+              <td style="border-top: none;">砼坍落度</td>
+              <td style="border-top: none;">{{orderData.tld}}</td>
+            </tr>
+            <tr>
+              <td style="width: 102px;">浇筑方式</td>
+              <td>{{orderData.xlfs}}</td>
+              <td>车号</td>
+              <td>{{orderData.dych}}</td>
+            </tr>
+            <tr>
+              <td style="width: 102px;">本车车次</td>
+              <td>{{orderData.cs}}</td>
+              <td>本车方量</td>
+              <td>{{orderData.fl}}</td>
+            </tr>
+            <tr style="border-bottom: none;">
+              <td style="width: 102px;border-bottom: none;">操作员</td>
+              <td>{{orderData.operator}}</td>
+              <td>驾驶员</td>
+              <td>{{orderData.drivername}}</td>
+            </tr>
+          </tbody>
+        </table> 
+        <table class="concrete_table floating" border="1" cellspacing="0" style="border-top: none;border-collapse: collapse;" >
+          <tbody>   
+            <tr>
+              <td style="border-top: none;width: 102px;border-bottom: none;">客户签字</td>
+              <td style="border-top: none;">
+                <img v-if="imgUrl" :src="imgUrl" alt="" style="height: 45px;width:100%">
+                <div v-else @click="beadleCanvas" style="color: #0000FF;">确认签字</div> 
+              </td>
+            </tr>
+          </tbody>  
+        </table>
+      </div>
+    </div>
+    <div class="floating" v-if="canvasShow" style="margin-top: 10px;">
+      <div class="concrete_canvas_conent" style="background: #53B682;">
+        <canvas
+          ref="canvas" 
+          id="canvas" 
+          height="160" 
+          @touchstart="mStart($event)"
+          @touchmove="mMove($event)"
+          @touchend="mEnd($event)"
+          style="width: 100%;"
+        ></canvas>
+     </div> 
+      <div class="concrete_canvas">
+        <div style="text-align: center;line-height:66px;" @click.prevent="clearPanel">
+          <img src="./images/close.png" alt="" style="height: 35px;">
+        </div>
+        <div style="text-align: center;line-height:66px;" @click="confirm">
+          <img src="./images/succeed.png" alt="" style="height: 35px;">
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let app =new Vue({
+      el: '#app',
+      data: {
+        imgUrl:'',
+        imgFile:{},
+        canvasShow:false,
+        point: {
+          x: 0,
+          y: 0
+        },
+        moving: false, // 是否正在绘制中且移动
+        filterImage:{},
+        cookieToken:'',
+        noticeId:'',
+        orderData:{}
+      },
+      methods: {
+        init(){
+          let that = this
+          let params ={
+            ysdh:this.noticeId
+          } 
+          axios({
+                url: '/video/commercialVehicle/public/AppDiamensionalCodeDetail',
+                method: 'post',
+                data:params,
+                // headers: { 'Authorization': that.cookieToken },
+            }).then(res=> {
+              if (res.data.code == '0000') {
+                this.orderData = res.data.data[0]
+              }
+          }).catch(function (error) {
+            console.log(error);
+          });
+        },
+        //获取路由参数
+        getQueryVariable(variable){
+          var query = window.location.search.substring(1);
+          var vars = query.split("&");
+          for (var i=0;i<vars.length;i++) {
+                  var pair = vars[i].split("=");
+                  if(pair[0] == variable){return pair[1];}
+          }
+          return(false);
+        },
+        //点击加载画板
+        beadleCanvas(){
+          this.canvasShow = true
+          this.initPanel();
+        },
+        //初始化画板
+        initPanel() {
+          this.$nextTick(() => {
+            const c = this.$refs.canvas;
+            this.stage_info = c.getBoundingClientRect()
+            c.width = this.stage_info.width;
+            c.height = this.stage_info.height;
+            const ctx = c.getContext("2d");
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            if (this.value) {
+              const image = new Image();
+              image.src = this.image_src;
+              image.onload = function() {
+                ctx.drawImage(image, 0, 0);
+              };
+            }
+            c.focus();
+          });
+        },
+       // 清空签名
+        clearPanel(e) {
+          this.$nextTick(() => {
+            const el = this.$refs["canvas"];
+            const ctx = el.getContext("2d");
+            ctx.clearRect(0, 0, el.width, el.height);
+          });
+        },
+        // 确认签名
+        confirm() {
+          this.$nextTick(() => {
+            try {
+              const canvas = this.$refs["canvas"];
+              const blank = document.createElement("canvas"); // 创建一个空canvas对象
+              blank.width = canvas.width;
+              blank.height = canvas.height;
+              if (canvas.toDataURL() === blank.toDataURL()) {
+                this.$message.error("签字格式不正确");
+              } else {
+              //执行所需操作
+              let imgUrl=canvas.toDataURL("image/png");
+              console.log(imgUrl);
+              this.imgUrl = imgUrl
+              var base64Img = imgUrl // base64编码的图片
+              var imgFile = this.dataURLtoFile(base64Img)
+              this.httpRequest(imgFile)
+              }
+            } catch (e) {
+              console.warn(e);
+            }
+          });
+        },
+        //base64转换为图片格式
+        dataURLtoFile(dataUrl, filename = 'file') {
+          let arr = dataUrl.split(',')
+          let mime = arr[0].match(/:(.*?);/)[1]
+          let suffix = mime.split('/')[1]
+          let bstr = atob(arr[1])
+          let n = bstr.length
+          let u8arr = new Uint8Array(n)
+          while (n--) {
+              u8arr[n] = bstr.charCodeAt(n)
+          }
+          return new File([u8arr], `${filename}.${suffix}`, {
+              type: mime
+          })
+        },
+        //上传图片
+        httpRequest(data){
+          let that = this
+          // let params ={
+          //   files:data
+          // } 
+          let fromData=new FormData();
+          fromData.append('file',data);
+          fromData.append('ysdh',this.noticeId);
+          axios({
+                url: '/video/commercialVehicle/public/uploadtransport',
+                method: 'post',
+                data:fromData,
+                // headers: { 'Authorization': that.cookieToken },
+            }).then(res=> {
+              if (res.data.code == '0000') {
+                this.canvasShow =false
+              }
+          }).catch(function (error) {
+            console.log(error);
+          });
+        },
+        // 触摸(开始)
+        mStart(e) {
+          const el = e.target || e.srcElement;
+          this.ctx = el.getContext("2d");
+          console.log(e);
+          let x = e.touches[0].clientX - this.stage_info.left,
+            y = e.touches[0].clientY - this.stage_info.top // 获取触摸点在画板（canvas）的坐标
+          console.log(x, y);
+          this.point.x = x;
+          this.point.y = y;
+          this.ctx.beginPath();
+          this.moving = true;
+        },
+        // 滑动中...
+        mMove(e) {
+          if (this.moving) {
+            // e.target.offsetLeft
+            let x = e.touches[0].clientX - this.stage_info.left,
+              y = e.touches[0].clientY - this.stage_info.top; // 获取触摸点在画板（canvas）的坐标，可能不太精准，需要调整
+            this.ctx.moveTo(this.point.x, this.point.y); // 把路径移动到画布中的指定点，不创建线条(起始点)
+            this.ctx.lineTo(x, y); // 添加一个新点，然后创建从该点到画布中最后指定点的线条，不创建线条
+            this.ctx.stroke(); // 绘制
+            (this.point.x = x), (this.point.y = y); // 重置点坐标为上一个坐标
+          }
+        },
+        // 滑动结束
+        mEnd() {
+          if (this.moving) {
+            this.ctx.closePath(); // 停止绘制
+            this.moving = false; // 关闭绘制开关
+          }
+        }
+      },
+      beforeMount() {
+        console.log("挂载前生命周期");
+      },
+      mounted() {
+        console.log("挂载完成生命周期");
+        // this.cookieToken = this.getQueryVariable("token")
+        // this.cookieToken ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjbGllbnRpZCI6ODcsInRraSI6NTY3NDE2ODcxNDYxMTk1Nzc2LCJyb2xlaWQiOjIsInVzZXJ0eXBlIjowLCJsdHAiOiJhcHAiLCJ0eXBlaWQiOjE1MDEsImV4cCI6MTYxNjA1Mzk4OTg4MywidXNlcmlkIjo3Nywic2VydmVyaWQiOjM0LCJ1c2VybmFtZSI6ImFkbWluIn0=.YWYwODBhOGEwOTAzYzEyYTg5Yjg1ZmVhNTI5Y2U4OTc='
+        this.noticeId = this.getQueryVariable("noticeId")
+        // this.noticeId = '20210310142001Z2' 
+        this.init()
+      }
+    })
+  </script>
+</body>
+</html>

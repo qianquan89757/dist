@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+        html,
+        body,
+        .container {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            border-width: 0px;
+        }
+
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body style="background-color:#00151a;">
+    <iframe id="ds1" class="container" src=""></iframe>
+    <iframe id="ds2" class="container" src="" style="display: hide;"></iframe>
+    <script>
+        let now = new Date().getTime().toString();
+        now = now.substring(now.length - 6);
+        let sign = "87" + now;
+        let pages = [
+            "https://sugar.aipage.com/dashboard/2444be5c8bd4b5710049e7e3feda7fd4?clientid=87&sign=" + sign,
+            "https://sugar.aipage.com/dashboard/0a56a0b6acffe517479fbf6684b5021d",
+            "https://sugar.aipage.com/dashboard/bd94a2e02b034df924372971b356b521",
+            "https://sugar.aipage.com/dashboard/182f76166a879d43cb00c08e05089829",
+            "https://sugar.aipage.com/dashboard/6ed929333d150e2203ffeff48b0a313b",
+        ];
+        let index = pages.length - 1;
+        /**
+         * 轮播
+         */
+        let showId = "ds1";
+        let hideId = "ds2";
+        $("#" + showId).attr('src', pages[index]);
+        function slider() {
+            console.log('开始轮播')
+            if (index < pages.length - 1) {
+                index++;
+            } else {
+                index = 0;
+            }
+            $("#" + hideId).attr('src', pages[index]);
+            setTimeout(showHide, 10000);
+        }
+        function showHide() {
+            console.log('轮播切换')
+            $("#" + showId).fadeOut(1000, () => {
+                $("#" + showId).attr('src', "")
+            });
+            $("#" + hideId).fadeIn(1000);
+            let tmp = showId;
+            showId = hideId;
+            hideId = showId;
+        }
+        setInterval(slider, 20 * 1000);
+    </script>
+</body>
+
+</html>

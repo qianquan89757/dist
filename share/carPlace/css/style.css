@@ -1,0 +1,111 @@
+/* 全局清除浮动 */
+.floating:after {
+  content: '';
+  height: 0;
+  line-height: 0;
+  display: block;
+  visibility: hidden;
+  clear: both;
+}
+/* 单行溢出隐藏 */
+.nowrap{
+  width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spn_color{
+  color: #FE0808;
+}
+/* 导航 */
+.car_container .nav_bar .van-nav-bar__arrow {
+  font-size: 25px;
+}
+.nav_bar .van-nav-bar__title{
+  color: #ffffff;
+}
+.nav_bar .van-icon {
+    color: #ffff;
+}
+/* 内容 */
+.cell_conment .van-cell__title{
+  max-width: 99%;
+}
+.car_address{
+  padding: 20px 0px 10px 15px;
+  background: url(../images/jy_mbg.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  border-radius: 14px;
+}
+.car_title .car_coment{
+  font-size: 14px;
+  padding-right: 25px;
+  color: #010202;
+  margin-top: 5px;
+}
+.car_cent .car_adres_text{
+  float: left;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 28px;
+}
+.car_cent .car_adres_img{
+  float: right;
+  background: url(../images/jy-bg.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  width: 75px;
+  text-align: center;
+  line-height: 25px;
+  font-size: 15px;
+}
+.car_text{
+  margin-top: 20px;
+  padding-right: 26px;
+}
+.car_text .car_tel{
+  float: left;
+}
+.car_text img{
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+.car_text .car_lu{
+  float: right;
+}
+.car_rescue_coment{
+  border-bottom: 1px solid #ebedf0;
+  padding-bottom: 13px;
+}
+.car_rescue_coment img{
+  display: inline-block;
+  vertical-align: middle;
+  width: 90px;
+  height: 115px;
+}
+.car_rescue_coment .car_res_text{
+  padding-left: 10px;
+}
+.car_res_text div{
+  line-height: 30px;
+}
+.car_res_text .car_first_child{
+  font-size: 16px;
+  font-weight: bold;
+  color: #000000;
+}
+.list_img{
+  margin-top: 10px;
+}
+.list_img img{
+  vertical-align: middle;
+  width: 20px;
+}
+/* ******************** */
+/* 地图 */
+#container {width:100%; height: 100%; }  

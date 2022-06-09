@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="ui/ui.css" />
+    <script src="vue.js"></script>
+    <script src="axios.min.js"></script>
+    <script src="ui/ui.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <title>exlive3.0 运行监控</title>
+</head>
+
+<body>
+    <div v-clock id="appindex">
+        <div class="tabs">
+            <span @click="activeIndex=0" :class="activeIndex===0?'active':''">服务器运行监控</span>
+            <span @click="activeIndex=1" :class="activeIndex===1?'active':''">服务器程序监控</span>
+            <span @click="activeIndex=2" :class="activeIndex===2?'active':''">服务器数据存储</span>
+        </div>
+        <div class="iframewrap">
+            <iframe v-show="activeIndex===0" style="width: 100%;height: 100%;border:none" src="platform.html"></iframe>
+            <iframe v-show="activeIndex===1" style="width: 100%;height: 100%;border:none" src="server.html"></iframe>
+            <iframe v-show="activeIndex===2" style="width: 100%;height: 100%;border:none" src="storage.html"></iframe>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
+
+<script>
+    let a, b, c, d, e, f, g, h, i, j, k
+    const app = new Vue({
+        el: '#appindex',
+        data() {
+            return {
+                activeIndex: 0
+            }
+        },
+        created() {
+
+        },
+        mounted() {
+            window.addEventListener('message', (event) => {
+                let msg = event.data.msg
+                if (!msg) return
+                let tip = ''
+                if (msg.es === 0) {
+                    tip = `elasticsearch(ES数据库)-${msg.infoObj.es}`
+                    a && a && a.close()
+                    a = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    a && a && a.close()
+                }
+                if (msg.mq === 0) {
+                    tip = `exmqserver(MQ1)）-${msg.infoObj.mq}`
+                    b && b.close()
+                    b = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    b && b.close()
+                }
+                if (msg.redis === 0) {
+                    tip = `redis(缓存数据库)-${msg.infoObj.redis}`
+                    c && c.close()
+                    c = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    c && c.close()
+                }
+                if (msg.jt808 === 0) {
+                    tip = `exjt808(808转发)-${msg.infoObj.jt808}`
+                    d && d.close()
+                    d = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    d && d.close()
+                }
+                if (msg.jt809 === 0) {
+                    tip = `exjt809(809转发)-${msg.infoObj.jt809}`
+                    e && e.close()
+                    e = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+
+                } else {
+                    e && e.close()
+                }
+                if (msg.adas === 0) {
+                    tip = `exadas(adas服务)-${msg.infoObj.adas}`
+                    f && f.close()
+                    f = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    f && f.close()
+                }
+                if (msg.js === 0) {
+                    tip = `exrecver(接收)-${msg.infoObj.js}`
+                    g && g.close()
+                    g = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    g && g.close()
+                }
+                if (msg.jx === 0) {
+                    tip = `exparser(解析)-${msg.infoObj.jx}`
+                    h && h.close()
+                    h = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    h && h.close()
+                }
+                if (msg.media === 0) {
+                    tip = `exmedia(视频服务)-${msg.infoObj.media}`
+                    i && i.close()
+                    i = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    i && i.close()
+                }
+                if (msg.video === 0) {
+                    tip = `exdataserver(4G后台)-${msg.infoObj.video}`
+                    j && j.close()
+                    j = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    j && j.close()
+                }
+                if (msg.report === 0) {
+                    tip = `exreport(报表)-${msg.infoObj.report}`
+                    k && k.close()
+                    k = this.$notify.error({
+                        title: '异常提醒',
+                        dangerouslyUseHTMLString: true,
+                        message: `您服务器<strong style="color:#F56C6C">${tip}</strong>异常，请联系技术查看。`,
+                        duration: 0
+                    });
+                } else {
+                    k && k.close()
+                }
+
+            }, false)
+        }
+    })
+</script>
