@@ -22,7 +22,7 @@ const LOGIN_CONFIG = {
   VERIFYCODE: 0, //是否开启登录验证码，0表示禁用，1表示开启
   VERIFYTYPE:'blockPuzzle'
 }
-const TITLE='EXLIVE车联网综合服务平台'
+const TITLE='车联网综合服务平台'
 const MicroApp={
   home:`/microApp/home/`,
 
